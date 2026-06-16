@@ -84,6 +84,72 @@ export function resolveLoanFirstPaymentDate(
   );
 }
 
+/** Дата последнего платежа по графику кредита */
+export function resolveLoanEndDate(
+  vehicle: Pick<
+    AutoVehicle,
+    "financingType" | "loanTermMonths" | "loanPaymentDay" | "purchaseDate"
+  >
+) {
+  if (vehicle.financingType === "cash") {
+    return null;
+  }
+
+  const loanTermMonths = vehicle.loanTermMonths ?? 0;
+
+  if (loanTermMonths <= 0) {
+    return null;
+  }
+
+  const firstPaymentDate = resolveLoanFirstPaymentDate(vehicle);
+  return addMonthsToIsoDate(firstPaymentDate, loanTermMonths - 1);
+}
+
+/** Доля пройденного пути кредита от покупки до последнего платежа, 0–100 */
+export function resolveLoanProgressPercent(
+  vehicle: Pick<
+    AutoVehicle,
+    | "financingType"
+    | "purchaseDate"
+    | "loanTermMonths"
+    | "loanPaymentDay"
+    | "remaining"
+  >,
+  loanPaymentsCount: number,
+  asOf: Date = new Date()
+) {
+  if (vehicle.financingType === "cash") {
+    return null;
+  }
+
+  const loanTermMonths = vehicle.loanTermMonths ?? 0;
+
+  if (loanTermMonths <= 0) {
+    return null;
+  }
+
+  if (vehicle.remaining <= 0 || loanPaymentsCount >= loanTermMonths) {
+    return 100;
+  }
+
+  const loanEndDate = resolveLoanEndDate(vehicle);
+
+  if (!vehicle.purchaseDate || !loanEndDate) {
+    return Math.min(100, Math.max(0, (loanPaymentsCount / loanTermMonths) * 100));
+  }
+
+  const startMs = new Date(`${vehicle.purchaseDate}T12:00:00.000Z`).getTime();
+  const endMs = new Date(`${loanEndDate}T12:00:00.000Z`).getTime();
+  const nowMs = asOf.getTime();
+
+  if (Number.isNaN(startMs) || Number.isNaN(endMs) || endMs <= startMs) {
+    return Math.min(100, Math.max(0, (loanPaymentsCount / loanTermMonths) * 100));
+  }
+
+  const elapsed = (nowMs - startMs) / (endMs - startMs);
+  return Math.min(100, Math.max(0, elapsed * 100));
+}
+
 /** Сколько полных ежемесячных платежей прошло с даты первого платежа */
 export function countLoanMonthsElapsed(
   paymentStartDate: string,

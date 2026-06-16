@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BubbleCard } from "@/app/components/bubble-card";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
 import { useCreditCards } from "@/app/hooks/use-credit-cards";
 import { buildAppCatalog } from "@/lib/assistant/catalog";
@@ -357,7 +358,7 @@ export function FloatingAssistant() {
     <>
       {open ? (
         <div
-          className="fixed z-50 flex w-[min(100vw-2rem,22rem)] flex-col overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-xl"
+          className="fixed z-50 w-[min(100vw-2rem,22rem)]"
           style={{
             left: Math.min(
               window.innerWidth - 16 - Math.min(window.innerWidth - 32, 352),
@@ -366,7 +367,8 @@ export function FloatingAssistant() {
             top: Math.max(16, position.y - 360),
           }}
         >
-          <div className="border-b border-zinc-100 px-4 py-3">
+          <BubbleCard className="flex max-h-[min(24rem,70dvh)] flex-col overflow-hidden">
+          <div className="border-b border-white/40 px-4 py-3">
             <p className="text-sm font-semibold text-zinc-900">Помощник</p>
             <p className="mt-0.5 text-xs text-zinc-500">
               Сначала правила, потом GPT-4o mini
@@ -438,6 +440,7 @@ export function FloatingAssistant() {
               Отправить
             </button>
           </form>
+          </BubbleCard>
         </div>
       ) : null}
 

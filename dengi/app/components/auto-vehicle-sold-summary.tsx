@@ -1,5 +1,6 @@
 "use client";
 
+import { BubbleCard } from "@/app/components/bubble-card";
 import { UsdAmount } from "@/app/components/usd-amount";
 import { formatAppDateNumeric } from "@/lib/i18n/locale";
 import {
@@ -10,7 +11,7 @@ import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-zinc-100 px-4 py-2.5 last:border-b-0">
+    <div className="flex items-baseline justify-between gap-3 border-b border-white/40 px-4 py-2.5 last:border-b-0">
       <span className="text-[15px] leading-tight text-zinc-900">{label}</span>
       <span className="text-right text-[15px] font-medium tabular-nums text-zinc-900">
         {value}
@@ -28,7 +29,7 @@ export function AutoVehicleSoldSummary({ vehicle }: { vehicle: AutoVehicle }) {
       <h2 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
         Продажа
       </h2>
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200/60">
+      <BubbleCard>
         <InfoRow
           label="Дата"
           value={vehicle.soldAt ? formatAppDateNumeric(vehicle.soldAt) : "—"}
@@ -54,7 +55,7 @@ export function AutoVehicleSoldSummary({ vehicle }: { vehicle: AutoVehicle }) {
           label="Кошелёк"
           value={wallet ? formatDebitCashAccountLabel(wallet) : "—"}
         />
-      </div>
+      </BubbleCard>
       {vehicle.soldIgnoreLoanPayoff ? (
         <p className="px-1 text-xs leading-snug text-zinc-500">
           Кредит не погашался из выручки — вся сумма зачислена на счёт.

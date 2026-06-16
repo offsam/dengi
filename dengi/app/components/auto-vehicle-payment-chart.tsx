@@ -17,7 +17,7 @@ function MonthDot({ status }: { status: PaymentYearRow["months"][number]["status
     return (
       <span
         aria-hidden
-        className="block size-3 rounded-full bg-white ring-[1.5px] ring-[#16B0A6]"
+        className="block size-3 rounded-full bg-white ring-[1.5px] ring-zinc-500/70 shadow-[inset_0_1px_2px_rgba(55,50,45,0.15)]"
       />
     );
   }
@@ -78,7 +78,7 @@ export function AutoVehiclePaymentChart({ rows }: { rows: PaymentYearRow[] }) {
           Оплачено
         </span>
         <span className="inline-flex items-center gap-1">
-          <span className="size-3 rounded-full bg-white ring-[1.5px] ring-[#16B0A6]" />
+          <span className="size-3 rounded-full bg-white ring-[1.5px] ring-zinc-500/70 shadow-[inset_0_1px_2px_rgba(55,50,45,0.15)]" />
           Текущий
         </span>
         <span className="inline-flex items-center gap-1">

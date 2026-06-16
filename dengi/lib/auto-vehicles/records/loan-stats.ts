@@ -5,6 +5,7 @@ import { resolveLoanAprPercent, syncLoanInterestFromApr } from "../loan";
 export type AutoVehicleLoanStats = {
   monthlyPayment: number;
   annualRatePercent: number;
+  /** Примерные проценты в ближайшем ежемесячном платеже */
   monthlyInterest: number;
   remaining: number;
   paidPrincipal: number;
@@ -14,6 +15,14 @@ export type AutoVehicleLoanStats = {
   loanPaymentsCount: number;
   /** Примерный остаток процентов до погашения */
   remainingInterestApprox: number;
+  /** Цена покупки авто */
+  purchasePrice: number;
+  /** Изначальная сумма кредита */
+  loanAmount: number;
+  /** Всего платежей по графику */
+  paymentsTotal: number;
+  /** Осталось платежей по графику */
+  paymentsRemaining: number;
 };
 
 function estimateRemainingInterest(vehicle: AutoVehicle) {
@@ -111,6 +120,16 @@ export function computeAutoVehicleLoanStats(
 
   const remaining = Math.round(balance);
   const monthlyInterest = syncLoanInterestFromApr(remaining, annualRatePercent);
+  const purchasePrice = Math.max(0, vehicle.purchasePrice);
+  const hasLoan =
+    vehicle.financingType !== "cash" &&
+    vehicle.status !== "sold" &&
+    (vehicle.loanTermMonths > 0 || vehicle.loanPayment > 0);
+  const loanAmount = hasLoan ? purchasePrice : 0;
+  const paymentsTotal = hasLoan ? Math.max(0, vehicle.loanTermMonths) : 0;
+  const paymentsRemaining = hasLoan
+    ? Math.max(0, paymentsTotal - loanPaymentsCount)
+    : 0;
 
   return {
     monthlyPayment: vehicle.loanPayment,
@@ -126,5 +145,9 @@ export function computeAutoVehicleLoanStats(
       remaining,
       loanInterest: monthlyInterest,
     }),
+    purchasePrice,
+    loanAmount,
+    paymentsTotal,
+    paymentsRemaining,
   };
 }

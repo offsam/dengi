@@ -2,14 +2,17 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { UsdAmount } from "@/app/components/usd-amount";
+import { BubbleCard } from "@/app/components/bubble-card";
+import { BubbleInsetOverlay } from "@/app/components/bubble-inset-overlay";
 import { formatAppDate } from "@/lib/i18n/locale";
 import type { AutoVehiclePaymentType } from "@/lib/auto-vehicles/records/types";
 import type { PaymentTimelineEntry } from "@/lib/auto-vehicles/records/payment-timeline";
+import { formatDaysUntilPayment } from "@/lib/auto-vehicles/records/payment-timeline";
 import type { AutoVehicleRecord } from "@/lib/auto-vehicles/records/types";
 
 const PAYMENT_LABELS: Record<AutoVehiclePaymentType, string> = {
   loan: "Кредит",
-  extra: "Досрочно",
+  extra: "Досрочный",
   insurance: "Страховка",
 };
 
@@ -25,40 +28,18 @@ function formatDate(iso: string) {
 }
 
 function formatDaysUntil(dateIso: string) {
-  const today = new Date();
-  today.setHours(12, 0, 0, 0);
-  const target = new Date(`${dateIso}T12:00:00.000Z`);
-  const days = Math.ceil((target.getTime() - today.getTime()) / 86_400_000);
-
-  if (days <= 0) {
-    return "Сегодня";
-  }
-
-  if (days === 1) {
-    return "Завтра";
-  }
-
-  const mod10 = days % 10;
-  const mod100 = days % 100;
-  let word = "дней";
-
-  if (mod10 === 1 && mod100 !== 11) {
-    word = "день";
-  } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
-    word = "дня";
-  }
-
-  return `Через ${days} ${word}`;
+  return formatDaysUntilPayment(dateIso);
 }
 
 function CurrentPaymentBubble({ entry }: { entry: PaymentTimelineEntry }) {
   const daysLabel = formatDaysUntil(entry.date);
 
   return (
-    <div className="rounded-2xl border border-[#16B0A6]/55 bg-white/55 px-3.5 py-2.5 shadow-md shadow-[#16B0A6]/15 backdrop-blur-md">
-      <div className="flex items-start justify-between gap-3">
+    <BubbleCard className="isolate px-3.5 py-2.5">
+      <BubbleInsetOverlay rounded="2xl" />
+      <div className="relative z-[1] flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <span className="mb-1 inline-block rounded-full bg-[#16B0A6]/20 px-2.5 py-0.5 text-[11px] font-semibold text-[#16B0A6]">
+          <span className="mb-1 inline-block rounded-full bg-zinc-900/[0.08] px-2.5 py-0.5 text-[11px] font-semibold text-zinc-600 shadow-[inset_0_1px_3px_rgba(55,50,45,0.12)]">
             {daysLabel}
           </span>
           <p className="truncate text-[15px] font-semibold leading-snug text-zinc-900">
@@ -74,7 +55,7 @@ function CurrentPaymentBubble({ entry }: { entry: PaymentTimelineEntry }) {
           <UsdAmount amount={entry.amount} exact />
         </p>
       </div>
-    </div>
+    </BubbleCard>
   );
 }
 

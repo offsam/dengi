@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { BubbleCard } from "@/app/components/bubble-card";
 import { buildVehicleDisplayTitle } from "@/lib/auto-vehicles";
 import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
 
@@ -60,7 +61,7 @@ export function AutoVehicleAddedDialog({
         onClick={onContinue}
       />
 
-      <div className="relative w-full max-w-sm rounded-2xl bg-zinc-50 px-5 py-5 shadow-xl ring-1 ring-zinc-200/60">
+      <BubbleCard className="relative w-full max-w-sm px-5 py-5">
         <h2
           id="auto-added-title"
           className="text-center text-base font-semibold tracking-tight text-zinc-900"
@@ -78,7 +79,7 @@ export function AutoVehicleAddedDialog({
         >
           Перейти к автомобилю
         </button>
-      </div>
+      </BubbleCard>
     </div>
   );
 }

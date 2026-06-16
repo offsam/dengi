@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BubbleCard } from "@/app/components/bubble-card";
 import { CreditCardFormFields } from "@/app/components/credit-card-form-fields";
 import { CreditCardTile } from "@/app/components/credit-card-tile";
 import { isOtherBank } from "@/lib/bank-logos";
@@ -87,8 +88,8 @@ export function CreditCardAddDialog({
         onClick={onClose}
       />
 
-      <div className="relative flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-zinc-50 shadow-xl">
-        <div className="shrink-0 border-b border-zinc-200/80 px-4 py-4">
+      <BubbleCard className="relative flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl rounded-b-none">
+        <div className="shrink-0 border-b border-white/40 px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <h2
               id="add-card-title"
@@ -126,7 +127,7 @@ export function CreditCardAddDialog({
             Добавить карту
           </button>
         </form>
-      </div>
+      </BubbleCard>
     </div>
   );
 }

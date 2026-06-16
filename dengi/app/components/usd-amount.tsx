@@ -25,9 +25,11 @@ export function UsdAmount({
   tone = "neutral",
   className = "",
 }: UsdAmountProps) {
+  const toneClass = className ? "" : toneClassName[tone];
+
   return (
     <span
-      className={`inline tabular-nums whitespace-nowrap ${toneClassName[tone]} ${className}`.trim()}
+      className={`inline tabular-nums whitespace-nowrap ${toneClass} ${className}`.trim()}
     >
       {formatUsdAmount(amount, exact)}
     </span>

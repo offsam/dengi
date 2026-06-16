@@ -1,8 +1,10 @@
 "use client";
 
+import { BubbleCard } from "@/app/components/bubble-card";
 import { useMemo, useState } from "react";
 import { useCreditCardTransactions } from "@/app/hooks/use-credit-card-transactions";
 import { UsdAmount } from "@/app/components/usd-amount";
+import { APP_BUBBLE_INSET_SELECTED } from "@/lib/app-theme";
 import {
   buildMonthlyDebtHistory,
   MAX_MONTHLY_DEBT_HISTORY,
@@ -26,14 +28,14 @@ function ReportMetric({
         : "text-zinc-900";
 
   return (
-    <div className="rounded-2xl border border-zinc-200/80 bg-white px-3 py-3 shadow-sm">
+    <BubbleCard className="px-3 py-3">
       <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">
         {label}
       </p>
       <p className={`mt-1 text-lg font-semibold tabular-nums ${toneClass}`}>
         {value}
       </p>
-    </div>
+    </BubbleCard>
   );
 }
 
@@ -113,7 +115,7 @@ export function CreditCardReportPanel({
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200/80 bg-white shadow-sm">
+        <BubbleCard>
           {monthlyDebt.map((entry) => {
             const selected = entry.id === activeMonthId;
 
@@ -122,8 +124,8 @@ export function CreditCardReportPanel({
                 key={entry.id}
                 type="button"
                 onClick={() => setSelectedMonthId(entry.id)}
-                className={`flex w-full items-center justify-between gap-3 border-b border-zinc-100 px-4 py-3.5 text-left last:border-b-0 ${
-                  selected ? "bg-zinc-50" : "bg-white"
+                className={`flex w-full items-center justify-between gap-3 border-b border-white/40 px-4 py-3.5 text-left last:border-b-0 ${
+                  selected ? APP_BUBBLE_INSET_SELECTED : ""
                 }`}
               >
                 <div className="min-w-0">
@@ -138,7 +140,7 @@ export function CreditCardReportPanel({
               </button>
             );
           })}
-        </div>
+        </BubbleCard>
       </div>
     </div>
   );

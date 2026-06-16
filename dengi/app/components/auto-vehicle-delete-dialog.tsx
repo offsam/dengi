@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BubbleCard } from "@/app/components/bubble-card";
 import { UsdAmount, UsdAmountInput } from "@/app/components/usd-amount";
 import {
   DEBIT_CASH_ACCOUNTS,
@@ -181,7 +182,7 @@ export function AutoVehicleDeleteDialog({
         onClick={handleClose}
       />
 
-      <div className="relative w-full max-w-sm rounded-2xl bg-zinc-50 px-4 py-4 shadow-xl ring-1 ring-zinc-200/60">
+      <BubbleCard className="relative w-full max-w-sm px-4 py-4">
         {step === "choose" ? (
           <>
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -321,7 +322,7 @@ export function AutoVehicleDeleteDialog({
             </div>
           </>
         )}
-      </div>
+      </BubbleCard>
     </div>
   );
 }

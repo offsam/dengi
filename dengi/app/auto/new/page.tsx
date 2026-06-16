@@ -1,5 +1,6 @@
-import { AutoVehicleAddView } from "@/app/components/auto-vehicle-add-view";
+import { redirect } from "next/navigation";
 
+/** Добавление авто — popup на главной; старый URL перенаправляем */
 export default function AutoNewPage() {
-  return <AutoVehicleAddView />;
+  redirect("/");
 }

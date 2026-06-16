@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { BubbleCard } from "@/app/components/bubble-card";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
 import { useCreditCards } from "@/app/hooks/use-credit-cards";
 import { formatMoney, formatMoneyExact } from "@/lib/format-money";
@@ -28,10 +29,10 @@ function MetricCard({
         : "text-zinc-900";
 
   return (
-    <div className="rounded-2xl border border-zinc-200/80 bg-white px-3 py-3 shadow-sm">
+    <BubbleCard className="px-3 py-3">
       <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">{label}</p>
       <p className={`mt-1 text-lg font-semibold tabular-nums ${valueTone}`}>{value}</p>
-    </div>
+    </BubbleCard>
   );
 }
 

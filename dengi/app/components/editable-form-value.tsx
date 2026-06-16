@@ -361,8 +361,8 @@ function BodyColorSwatches({
             title={color.label}
             className={`size-7 shrink-0 rounded-full transition-shadow ${
               selected
-                ? "ring-2 ring-zinc-900 ring-offset-1"
-                : "ring-1 ring-zinc-200/90 hover:ring-zinc-400"
+                ? "ring-2 ring-zinc-500/80 ring-offset-1 ring-offset-white/60"
+                : "ring-1 ring-white/90 hover:ring-zinc-300"
             }`}
             style={{ backgroundColor: color.hex }}
             onClick={() => onChange(color)}

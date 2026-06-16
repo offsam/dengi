@@ -1,8 +1,9 @@
 "use client";
 
-import { SegmentedControl } from "@/app/components/segmented-control";
+import { BubbleSegmentedControl } from "@/app/components/bubble-segmented-control";
 import { ReadonlyFormValue } from "@/app/components/editable-form-value";
 import { FormRowEnd, UsdAmount, UsdAmountInput } from "@/app/components/usd-amount";
+import { APP_BUBBLE_INSET_CONTROL } from "@/lib/app-theme";
 import { useCreditCards } from "@/app/hooks/use-credit-cards";
 import {
   createDefaultCashFunding,
@@ -50,21 +51,19 @@ const TRADE_PART_OPTIONS: { id: AutoVehicleTradePart; label: string }[] = [
 const fieldClassName =
   "w-full min-w-0 border-0 bg-transparent py-0 text-right text-[15px] leading-none text-zinc-900 outline-none ring-0 placeholder:text-zinc-300 focus:ring-0 tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
+const editableSelectClassName = `${fieldClassName} max-w-full truncate ${APP_BUBBLE_INSET_CONTROL}`;
+
+const editableInputClassName = `${fieldClassName} ${APP_BUBBLE_INSET_CONTROL}`;
+
 function EditRow({
   label,
   children,
-  editable = false,
 }: {
   label: string;
   children: React.ReactNode;
-  editable?: boolean;
 }) {
   return (
-    <div
-      className={`flex min-h-[48px] items-center gap-3 border-b border-zinc-100 px-4 py-2.5 transition-colors duration-200 last:border-b-0 ${
-        editable ? "bg-[#16B0A6]/[0.08]" : ""
-      }`}
-    >
+    <div className="flex min-h-[48px] items-center gap-3 border-b border-white/35 px-4 py-2.5 transition-colors duration-200 last:border-b-0">
       <span className="w-[42%] shrink-0 text-[15px] leading-tight text-zinc-900">{label}</span>
       <div className="flex min-w-0 flex-1 items-center justify-end">{children}</div>
     </div>
@@ -83,12 +82,10 @@ export function AutoVehicleCashFundingFields({
   funding,
   onPatch,
   readOnly = false,
-  editableHighlight = false,
 }: {
   funding: AutoVehicleCashFunding | undefined;
   onPatch: (patch: AutoVehicleCashFunding) => void;
   readOnly?: boolean;
-  editableHighlight?: boolean;
 }) {
   const { cards } = useCreditCards();
   const state = normalizeCashFunding(funding);
@@ -144,12 +141,12 @@ export function AutoVehicleCashFundingFields({
   if (readOnly) {
     return (
       <>
-        <EditRow editable={!readOnly && editableHighlight} label="Источник оплаты">
+        <EditRow label="Источник оплаты">
           <InfoValue>{CASH_METHOD_LABELS[state.method]}</InfoValue>
         </EditRow>
 
         {state.method === "wallet" ? (
-          <EditRow editable={!readOnly && editableHighlight} label="Счёт или кошелёк">
+          <EditRow label="Счёт или кошелёк">
             <InfoValue>
               {walletAccount ? formatDebitCashAccountLabel(walletAccount) : "—"}
             </InfoValue>
@@ -157,7 +154,7 @@ export function AutoVehicleCashFundingFields({
         ) : null}
 
         {state.method === "credit_card" ? (
-          <EditRow editable={!readOnly && editableHighlight} label="Кредитная карта">
+          <EditRow label="Кредитная карта">
             <InfoValue>
               {creditCard ? `${getCreditCardBankName(creditCard)} · ${creditCard.name}` : "—"}
             </InfoValue>
@@ -166,12 +163,12 @@ export function AutoVehicleCashFundingFields({
 
         {state.method === "trade" ? (
           <>
-            <EditRow editable={!readOnly && editableHighlight} label="Часть трейда">
+            <EditRow label="Часть трейда">
               <InfoValue>{TRADE_PART_LABELS[state.tradePart ?? "cash"]}</InfoValue>
             </EditRow>
 
             {state.tradePart === "cash" ? (
-              <EditRow editable={!readOnly && editableHighlight} label="Сумма наличными">
+              <EditRow label="Сумма наличными">
                 <ReadonlyFormValue>
                   <UsdAmount amount={state.tradeCashAmount ?? 0} />
                 </ReadonlyFormValue>
@@ -180,16 +177,16 @@ export function AutoVehicleCashFundingFields({
 
             {state.tradePart === "vehicle" ? (
               <>
-                <EditRow editable={!readOnly && editableHighlight} label="Марка">
+                <EditRow label="Марка">
                   <InfoValue>{tradeMake}</InfoValue>
                 </EditRow>
-                <EditRow editable={!readOnly && editableHighlight} label="Модель">
+                <EditRow label="Модель">
                   <InfoValue>{tradeModelLabel}</InfoValue>
                 </EditRow>
-                <EditRow editable={!readOnly && editableHighlight} label="Год">
+                <EditRow label="Год">
                   <InfoValue>{state.tradeVehicleYear ?? "—"}</InfoValue>
                 </EditRow>
-                <EditRow editable={!readOnly && editableHighlight} label="Оценка стоимости">
+                <EditRow label="Оценка стоимости">
                   <ReadonlyFormValue>
                     <UsdAmount amount={state.tradeVehicleValue ?? 0} />
                   </ReadonlyFormValue>
@@ -199,14 +196,14 @@ export function AutoVehicleCashFundingFields({
 
             {state.tradePart === "wallet" ? (
               <>
-                <EditRow editable={!readOnly && editableHighlight} label="Кошелёк">
+                <EditRow label="Кошелёк">
                   <InfoValue>
                     {tradeWalletAccount
                       ? formatDebitCashAccountLabel(tradeWalletAccount)
                       : "—"}
                   </InfoValue>
                 </EditRow>
-                <EditRow editable={!readOnly && editableHighlight} label="Остаток доплатой">
+                <EditRow label="Остаток доплатой">
                   <ReadonlyFormValue>
                     <UsdAmount amount={state.tradeWalletAmount ?? 0} />
                   </ReadonlyFormValue>
@@ -222,7 +219,7 @@ export function AutoVehicleCashFundingFields({
   return (
     <div className="space-y-2 border-b border-zinc-100 px-4 py-3">
       <p className="text-[13px] text-zinc-900">Источник оплаты</p>
-      <SegmentedControl
+      <BubbleSegmentedControl
         options={CASH_METHOD_OPTIONS}
         value={state.method}
         onChange={patchMethod}
@@ -231,9 +228,9 @@ export function AutoVehicleCashFundingFields({
 
       <div className="-mx-4 overflow-hidden border-t border-zinc-100">
         {state.method === "wallet" ? (
-          <EditRow editable={!readOnly && editableHighlight} label="Счёт или кошелёк">
+          <EditRow label="Счёт или кошелёк">
             <select
-              className={`${fieldClassName} max-w-full truncate`}
+              className={editableSelectClassName}
               value={state.walletId ?? "dc-3"}
               onChange={(event) =>
                 replaceFunding({ method: "wallet", walletId: event.target.value })
@@ -249,9 +246,9 @@ export function AutoVehicleCashFundingFields({
         ) : null}
 
         {state.method === "credit_card" ? (
-          <EditRow editable={!readOnly && editableHighlight} label="Кредитная карта">
+          <EditRow label="Кредитная карта">
             <select
-              className={`${fieldClassName} max-w-full truncate`}
+              className={editableSelectClassName}
               value={state.creditCardId ?? cards[0]?.id ?? ""}
               onChange={(event) =>
                 replaceFunding({
@@ -276,7 +273,7 @@ export function AutoVehicleCashFundingFields({
         {state.method === "trade" ? (
           <div className="space-y-2 px-0 py-2.5">
             <div className="px-4">
-              <SegmentedControl
+              <BubbleSegmentedControl
                 options={TRADE_PART_OPTIONS}
                 value={state.tradePart ?? "cash"}
                 onChange={(tradePart) =>
@@ -291,28 +288,30 @@ export function AutoVehicleCashFundingFields({
             </div>
 
             {state.tradePart === "cash" ? (
-              <EditRow editable={!readOnly && editableHighlight} label="Сумма наличными">
+              <EditRow label="Сумма наличными">
                 <FormRowEnd>
-                  <UsdAmountInput
-                    value={state.tradeCashAmount ?? 0}
-                    onChange={(tradeCashAmount) =>
-                      replaceFunding({
-                        ...state,
-                        method: "trade",
-                        tradePart: "cash",
-                        tradeCashAmount,
-                      })
-                    }
-                  />
+                  <span className={APP_BUBBLE_INSET_CONTROL}>
+                    <UsdAmountInput
+                      value={state.tradeCashAmount ?? 0}
+                      onChange={(tradeCashAmount) =>
+                        replaceFunding({
+                          ...state,
+                          method: "trade",
+                          tradePart: "cash",
+                          tradeCashAmount,
+                        })
+                      }
+                    />
+                  </span>
                 </FormRowEnd>
               </EditRow>
             ) : null}
 
             {state.tradePart === "vehicle" ? (
               <>
-                <EditRow editable={!readOnly && editableHighlight} label="Марка">
+                <EditRow label="Марка">
                   <select
-                    className={`${fieldClassName} max-w-full truncate`}
+                    className={editableSelectClassName}
                     value={tradeMake}
                     onChange={(event) => {
                       const models = getVehicleModelsForMake(event.target.value);
@@ -332,9 +331,9 @@ export function AutoVehicleCashFundingFields({
                   </select>
                 </EditRow>
 
-                <EditRow editable={!readOnly && editableHighlight} label="Модель">
+                <EditRow label="Модель">
                   <select
-                    className={`${fieldClassName} max-w-full truncate`}
+                    className={editableSelectClassName}
                     value={resolvedTradeCatalogId}
                     onChange={(event) =>
                       replaceFunding({
@@ -353,11 +352,11 @@ export function AutoVehicleCashFundingFields({
                   </select>
                 </EditRow>
 
-                <EditRow editable={!readOnly && editableHighlight} label="Год">
+                <EditRow label="Год">
                   <FormRowEnd>
                     <input
                       type="number"
-                      className={`${fieldClassName} w-[5.5rem]`}
+                      className={`${editableInputClassName} w-[5.5rem]`}
                       value={state.tradeVehicleYear ?? new Date().getFullYear()}
                       min={1980}
                       max={2030}
@@ -376,19 +375,21 @@ export function AutoVehicleCashFundingFields({
                   </FormRowEnd>
                 </EditRow>
 
-                <EditRow editable={!readOnly && editableHighlight} label="Оценка стоимости">
+                <EditRow label="Оценка стоимости">
                   <FormRowEnd>
-                    <UsdAmountInput
-                      value={state.tradeVehicleValue ?? 0}
-                      onChange={(tradeVehicleValue) =>
-                        replaceFunding({
-                          ...state,
-                          method: "trade",
-                          tradePart: "vehicle",
-                          tradeVehicleValue,
-                        })
-                      }
-                    />
+                    <span className={APP_BUBBLE_INSET_CONTROL}>
+                      <UsdAmountInput
+                        value={state.tradeVehicleValue ?? 0}
+                        onChange={(tradeVehicleValue) =>
+                          replaceFunding({
+                            ...state,
+                            method: "trade",
+                            tradePart: "vehicle",
+                            tradeVehicleValue,
+                          })
+                        }
+                      />
+                    </span>
                   </FormRowEnd>
                 </EditRow>
               </>
@@ -396,9 +397,9 @@ export function AutoVehicleCashFundingFields({
 
             {state.tradePart === "wallet" ? (
               <>
-                <EditRow editable={!readOnly && editableHighlight} label="Кошелёк">
+                <EditRow label="Кошелёк">
                   <select
-                    className={`${fieldClassName} max-w-full truncate`}
+                    className={editableSelectClassName}
                     value={state.tradeWalletId ?? "dc-3"}
                     onChange={(event) =>
                       replaceFunding({
@@ -417,19 +418,21 @@ export function AutoVehicleCashFundingFields({
                   </select>
                 </EditRow>
 
-                <EditRow editable={!readOnly && editableHighlight} label="Остаток доплатой">
+                <EditRow label="Остаток доплатой">
                   <FormRowEnd>
-                    <UsdAmountInput
-                      value={state.tradeWalletAmount ?? 0}
-                      onChange={(tradeWalletAmount) =>
-                        replaceFunding({
-                          ...state,
-                          method: "trade",
-                          tradePart: "wallet",
-                          tradeWalletAmount,
-                        })
-                      }
-                    />
+                    <span className={APP_BUBBLE_INSET_CONTROL}>
+                      <UsdAmountInput
+                        value={state.tradeWalletAmount ?? 0}
+                        onChange={(tradeWalletAmount) =>
+                          replaceFunding({
+                            ...state,
+                            method: "trade",
+                            tradePart: "wallet",
+                            tradeWalletAmount,
+                          })
+                        }
+                      />
+                    </span>
                   </FormRowEnd>
                 </EditRow>
               </>

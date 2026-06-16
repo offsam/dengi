@@ -33,24 +33,17 @@ export function AutoVehicleCard({ vehicle }: { vehicle: AutoVehicle }) {
 
   return (
     <article className="w-[156px] shrink-0">
-      <div className="flex items-start justify-between gap-2 leading-tight">
-        <div>
-          <p className="text-[10px] text-zinc-500">Цена покупки</p>
-          <p className="text-[13px] font-semibold tabular-nums text-zinc-900">
-            <UsdAmount amount={vehicle.purchasePrice} exact />
-          </p>
-        </div>
-
-        <div className="text-right">
-          <p className="text-[13px] font-semibold text-zinc-900">{heading.primary}</p>
-          {heading.secondary ? (
-            <p className="text-[12px] text-zinc-600">{heading.secondary}</p>
-          ) : null}
-        </div>
+      <div className="relative z-[2] text-right leading-tight">
+        <p className="text-[13px] font-semibold text-zinc-900">{heading.primary}</p>
+        {heading.secondary ? (
+          <p className="text-[12px] text-zinc-600">{heading.secondary}</p>
+        ) : null}
       </div>
 
       <AutoVehicleVisual
+        variant="shelf"
         catalogId={vehicle.catalogId}
+        bodyIconId={vehicle.bodyIconId}
         year={vehicle.year}
         bodyColorHex={vehicle.bodyColorHex}
         wheelColorHex={vehicle.wheelColorHex}

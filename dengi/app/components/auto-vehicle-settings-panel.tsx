@@ -56,7 +56,6 @@ export function AutoVehicleSettingsPanel({
         draft={editing ? draft : vehicle}
         onPatch={patchDraft}
         readOnly={!editing}
-        valueHighlightOnly={editing}
       />
 
       {editing ? (

@@ -12,6 +12,7 @@ import { CreditCardSettingsPanel } from "@/app/components/credit-card-settings-p
 import { CreditCardTile } from "@/app/components/credit-card-tile";
 import { CreditCardTransactionsPanel } from "@/app/components/credit-card-transactions-panel";
 import { useCreditCards } from "@/app/hooks/use-credit-cards";
+import { APP_PAGE_CLASS } from "@/lib/app-theme";
 import type { CreditCard } from "@/lib/credit-cards/types";
 
 function CreditCardDetailContent({ card }: { card: CreditCard }) {
@@ -29,7 +30,7 @@ function CreditCardDetailContent({ card }: { card: CreditCard }) {
   }
 
   return (
-    <div className="min-h-full bg-zinc-50 text-zinc-900">
+    <div className={APP_PAGE_CLASS}>
       <main className="mx-auto flex w-full max-w-md flex-col gap-5 px-4 py-6">
         <header className="flex items-center justify-between gap-3">
           <Link

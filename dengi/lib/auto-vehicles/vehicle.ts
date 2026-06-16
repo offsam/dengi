@@ -55,6 +55,8 @@ export type AutoVehicle = {
   financingType: AutoVehicleFinancingType;
   /** Только для financingType === cash */
   cashFunding?: AutoVehicleCashFunding;
+  /** id иконки типа кузова — lib/car-icons/registry */
+  bodyIconId?: string;
   bodyColorHex: string;
   bodyColorLabel: string;
   wheelColorHex: string;

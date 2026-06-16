@@ -1,4 +1,4 @@
-import { SegmentedControl } from "@/app/components/segmented-control";
+import { BubbleSegmentedControl } from "@/app/components/bubble-segmented-control";
 
 export type AutoVehicleDetailTab = "payments" | "expenses" | "stats" | "settings";
 
@@ -17,7 +17,7 @@ export function AutoVehicleDetailTabs({
   onChange: (tab: AutoVehicleDetailTab) => void;
 }) {
   return (
-    <SegmentedControl
+    <BubbleSegmentedControl
       options={TABS}
       value={active}
       onChange={onChange}

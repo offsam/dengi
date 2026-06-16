@@ -9,8 +9,9 @@ import { AutoVehicleFormFields } from "@/app/components/auto-vehicle-form-fields
 import { AutoVehiclePaymentsPanel } from "@/app/components/auto-vehicle-payments-panel";
 import { AutoVehicleSoldSummary } from "@/app/components/auto-vehicle-sold-summary";
 import { AutoVehicleStatsPanel } from "@/app/components/auto-vehicle-stats-panel";
-import { SegmentedControl } from "@/app/components/segmented-control";
+import { BubbleSegmentedControl } from "@/app/components/bubble-segmented-control";
 import { buildVehicleDisplayHeading } from "@/lib/auto-vehicles";
+import { APP_PAGE_CLASS } from "@/lib/app-theme";
 import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
 
 type ArchiveTab = "stats" | "payments" | "expenses" | "info";
@@ -27,7 +28,7 @@ export function AutoVehicleArchiveView({ vehicle }: { vehicle: AutoVehicle }) {
   const heading = buildVehicleDisplayHeading(vehicle.catalogId, vehicle.year);
 
   return (
-    <div className="min-h-full bg-zinc-50 text-zinc-900">
+    <div className={APP_PAGE_CLASS}>
       <main
         className={`mx-auto flex w-full max-w-md flex-col px-4 py-6 ${
           tab === "payments" ? "h-dvh min-h-0 gap-3 overflow-hidden" : "gap-5"
@@ -59,7 +60,7 @@ export function AutoVehicleArchiveView({ vehicle }: { vehicle: AutoVehicle }) {
 
         <AutoVehicleSoldSummary vehicle={vehicle} />
 
-        <SegmentedControl
+        <BubbleSegmentedControl
           options={ARCHIVE_TABS}
           value={tab}
           onChange={setTab}

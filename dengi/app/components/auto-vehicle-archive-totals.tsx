@@ -1,18 +1,19 @@
 "use client";
 
 import { useMemo } from "react";
+import { BubbleCard } from "@/app/components/bubble-card";
 import { UsdAmount } from "@/app/components/usd-amount";
 import { useAutoVehicleRecords } from "@/app/hooks/use-auto-vehicle-records";
 import { sumRecordsTotal } from "@/lib/auto-vehicles/records/stats";
 
 function StatBox({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-zinc-200/80 bg-white px-3.5 py-3.5 shadow-sm">
+    <BubbleCard className="px-3.5 py-3.5">
       <p className="text-[13px] leading-snug text-zinc-500">{label}</p>
       <p className="mt-1.5 text-[18px] font-semibold tabular-nums tracking-tight text-zinc-900">
         {value}
       </p>
-    </div>
+    </BubbleCard>
   );
 }
 

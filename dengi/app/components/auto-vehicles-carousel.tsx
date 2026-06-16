@@ -6,7 +6,7 @@ import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
 export function AutoVehiclesCarousel({ vehicles }: { vehicles: AutoVehicle[] }) {
   return (
     <div
-      className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-4 pb-1 touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="-mx-4 -mt-[82px] flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-4 pb-1 pt-[82px] touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       aria-label="Авто"
     >
       {vehicles.map((vehicle) => (

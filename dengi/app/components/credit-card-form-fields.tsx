@@ -1,4 +1,6 @@
+import { BubbleCard } from "@/app/components/bubble-card";
 import { UsdAmountInput } from "@/app/components/usd-amount";
+import { APP_BUBBLE_INPUT } from "@/lib/app-theme";
 import { BANKS, isOtherBank, POPULAR_BANK_IDS, type BankId } from "@/lib/bank-logos";
 import type { CreditCard } from "@/lib/credit-cards/types";
 
@@ -20,8 +22,7 @@ export function CreditCardField({ label, children, hint }: FieldProps) {
   );
 }
 
-export const creditCardInputClassName =
-  "w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-400";
+export const creditCardInputClassName = APP_BUBBLE_INPUT;
 
 function CreditCardUsdInput({
   value,
@@ -59,7 +60,7 @@ export function CreditCardFormFields({
 
   return (
     <>
-      <section className="space-y-4 rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm">
+      <BubbleCard className="space-y-4 p-4">
         <h2 className="text-sm font-semibold text-zinc-900">Основное</h2>
 
         <CreditCardField label="Название карты">
@@ -106,9 +107,9 @@ export function CreditCardFormFields({
             />
           </CreditCardField>
         ) : null}
-      </section>
+      </BubbleCard>
 
-      <section className="space-y-4 rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm">
+      <BubbleCard className="space-y-4 p-4">
         <h2 className="text-sm font-semibold text-zinc-900">Балансы</h2>
 
         <div className="grid grid-cols-2 gap-3">
@@ -140,9 +141,9 @@ export function CreditCardFormFields({
             />
           </CreditCardField>
         </div>
-      </section>
+      </BubbleCard>
 
-      <section className="space-y-4 rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm">
+      <BubbleCard className="space-y-4 p-4">
         <h2 className="text-sm font-semibold text-zinc-900">Условия</h2>
 
         <div className="grid grid-cols-2 gap-3">
@@ -189,7 +190,7 @@ export function CreditCardFormFields({
             required
           />
         </CreditCardField>
-      </section>
+      </BubbleCard>
     </>
   );
 }

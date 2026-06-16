@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CreditCardAddDialog } from "@/app/components/credit-card-add-dialog";
+import { BubbleAddButton } from "@/app/components/bubble-add-button";
 import { CreditCardCarousel } from "@/app/components/credit-card-carousel";
 import { useCreditCards } from "@/app/hooks/use-credit-cards";
 
@@ -22,14 +23,7 @@ function Shelf({
         <h2 className="text-sm font-semibold tracking-tight text-zinc-900">
           {title}
         </h2>
-        <button
-          type="button"
-          onClick={onAdd}
-          className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900"
-          aria-label={onAddLabel}
-        >
-          Добавить
-        </button>
+        <BubbleAddButton ariaLabel={onAddLabel} onClick={onAdd} />
       </div>
       {children}
     </section>

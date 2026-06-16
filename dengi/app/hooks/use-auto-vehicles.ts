@@ -21,7 +21,10 @@ const STORAGE_EVENT = "dengi:auto-vehicles-updated";
 const RECORDS_STORAGE_EVENT = "dengi:auto-vehicle-records-updated";
 const STORAGE_KEY = "dengi:auto-vehicles";
 
-let cachedSnapshot: AutoVehicle[] = [];
+/** Стабильная ссылка для SSR и до гидрации — иначе React уходит в бесконечный цикл */
+const EMPTY_VEHICLES: AutoVehicle[] = [];
+
+let cachedSnapshot: AutoVehicle[] = EMPTY_VEHICLES;
 let cachedStorageRaw: string | null = null;
 
 function invalidateSnapshotCache() {
@@ -30,7 +33,7 @@ function invalidateSnapshotCache() {
 
 function getSnapshot() {
   if (typeof window === "undefined") {
-    return [];
+    return EMPTY_VEHICLES;
   }
 
   const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -55,7 +58,7 @@ function subscribe(onStoreChange: () => void) {
 }
 
 function getServerSnapshot() {
-  return [];
+  return EMPTY_VEHICLES;
 }
 
 function notifyAutoVehiclesChanged() {
@@ -67,7 +70,7 @@ export function useAutoVehicles() {
   const mounted = useClientMounted();
   const vehicles = useSyncExternalStore(
     subscribe,
-    () => (mounted ? getSnapshot() : getServerSnapshot()),
+    () => (mounted ? getSnapshot() : EMPTY_VEHICLES),
     getServerSnapshot
   );
   const activeVehicles = useMemo(

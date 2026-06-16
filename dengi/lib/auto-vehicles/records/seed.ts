@@ -66,4 +66,13 @@ export const SEED_AUTO_VEHICLE_RECORDS: AutoVehicleRecord[] = [
     description: "Chevron",
     occurredAt: "2026-04-28T08:15:00.000Z",
   },
+  {
+    id: "avr-8",
+    vehicleId: "av-1",
+    kind: "expense",
+    expenseType: "upgrade",
+    amount: 420,
+    description: "Коврики и tint",
+    occurredAt: "2026-06-02T16:00:00.000Z",
+  },
 ];

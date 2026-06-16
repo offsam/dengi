@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { BubbleCard } from "@/app/components/bubble-card";
 import { UsdAmount } from "@/app/components/usd-amount";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
 import { formatAppDateNumeric } from "@/lib/i18n/locale";
 import { buildVehicleDisplayHeading } from "@/lib/auto-vehicles";
+import { APP_PAGE_CLASS } from "@/lib/app-theme";
 
 export function AutoVehicleArchivePageView() {
   const { archivedVehicles } = useAutoVehicles();
 
   return (
-    <div className="min-h-full bg-zinc-50 text-zinc-900">
+    <div className={APP_PAGE_CLASS}>
       <main className="mx-auto flex w-full max-w-md flex-col gap-5 px-4 py-6">
         <header className="flex items-center justify-between gap-3">
           <Link
@@ -28,9 +30,9 @@ export function AutoVehicleArchivePageView() {
         </p>
 
         {archivedVehicles.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-4 py-10 text-center text-sm text-zinc-500">
+          <BubbleCard className="border-dashed px-4 py-10 text-center text-sm text-zinc-500">
             В архиве пока пусто.
-          </p>
+          </BubbleCard>
         ) : (
           <ul className="space-y-2">
             {archivedVehicles.map((vehicle) => {
@@ -38,10 +40,8 @@ export function AutoVehicleArchivePageView() {
 
               return (
                 <li key={vehicle.id}>
-                  <Link
-                    href={`/auto/${vehicle.id}`}
-                    className="flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-zinc-200/60 transition-colors hover:bg-zinc-50"
-                  >
+                  <Link href={`/auto/${vehicle.id}`} className="block">
+                    <BubbleCard className="flex items-center justify-between gap-3 px-4 py-3 transition-opacity hover:opacity-95">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-zinc-900">
                         {heading.primary}
@@ -62,6 +62,7 @@ export function AutoVehicleArchivePageView() {
                         </p>
                       ) : null}
                     </div>
+                    </BubbleCard>
                   </Link>
                 </li>
               );

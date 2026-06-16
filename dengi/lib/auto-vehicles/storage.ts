@@ -1,9 +1,11 @@
+import { resolveBodyTypeIcon } from "@/lib/car-icons";
 import { prepareAutoVehicleDraft, toAutoVehicleDraft } from "./defaults";
 import { SEED_AUTO_VEHICLES } from "./seed";
 import { normalizeCashFunding } from "./cash-funding";
 import { syncFinancingFromLoanInputs, resolveStoredLoanPaymentDay, syncLoanInterestFromApr } from "./loan";
 import { kmToMiles } from "@/lib/units/mileage";
 import { removeAutoVehicleRecordsForVehicle } from "@/lib/auto-vehicles/records/storage";
+import { removeCustomExpenseCategoriesForVehicle } from "@/lib/auto-vehicles/records/custom-expense-categories";
 import { syncAutoVehicleLoanPayments } from "@/lib/auto-vehicles/records/sync-loan-payments";
 import type {
   AutoVehicle,
@@ -40,6 +42,7 @@ function normalizeAutoVehicle(raw: AutoVehicle): AutoVehicle {
   const financingType = raw.financingType ?? "credit";
   const base: AutoVehicle = {
     ...raw,
+    bodyIconId: resolveBodyTypeIcon(raw.bodyIconId).id,
     status: raw.status ?? "active",
     financingType,
     cashFunding:
@@ -155,6 +158,7 @@ export function disposeAutoVehicle(
   if (mode === "with-records") {
     deleteAutoVehicle(id);
     removeAutoVehicleRecordsForVehicle(id);
+    removeCustomExpenseCategoriesForVehicle(id);
     return readAutoVehicles();
   }
 

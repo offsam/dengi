@@ -151,6 +151,79 @@ export function buildAutoVehiclePaymentTimeline(
   return timeline;
 }
 
+/** Сколько дней до даты платежа */
+export function formatDaysUntilPayment(dateIso: string, asOf: Date = new Date()) {
+  const today = new Date(asOf);
+  today.setHours(12, 0, 0, 0);
+  const target = new Date(`${dateIso}T12:00:00.000Z`);
+  const days = Math.ceil((target.getTime() - today.getTime()) / 86_400_000);
+
+  if (days <= 0) {
+    return "Сегодня";
+  }
+
+  if (days === 1) {
+    return "Завтра";
+  }
+
+  const mod10 = days % 10;
+  const mod100 = days % 100;
+  let word = "дней";
+
+  if (mod10 === 1 && mod100 !== 11) {
+    word = "день";
+  } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
+    word = "дня";
+  }
+
+  return `Через ${days} ${word}`;
+}
+
+/** Подпись под остатком платежей в статистике */
+export function formatNextPaymentSubline(dateIso: string, asOf: Date = new Date()) {
+  const until = formatDaysUntilPayment(dateIso, asOf);
+
+  if (until === "Сегодня") {
+    return "Следующий платёж сегодня";
+  }
+
+  if (until === "Завтра") {
+    return "Следующий платёж завтра";
+  }
+
+  const rest = until.charAt(0).toLowerCase() + until.slice(1);
+  return `Следующий платёж ${rest}`;
+}
+
+/** Короткая подпись: «Следующий через N дней» */
+export function formatNextPaymentShortSubline(dateIso: string, asOf: Date = new Date()) {
+  const until = formatDaysUntilPayment(dateIso, asOf);
+
+  if (until === "Сегодня") {
+    return "Следующий сегодня";
+  }
+
+  if (until === "Завтра") {
+    return "Следующий завтра";
+  }
+
+  const rest = until.charAt(0).toLowerCase() + until.slice(1);
+  return `Следующий ${rest}`;
+}
+
+/** Дата ближайшего неоплаченного платежа по графику */
+export function resolveNextLoanPaymentDate(
+  vehicle: AutoVehicle,
+  records: AutoVehicleRecord[],
+  asOf: Date = new Date()
+) {
+  const current = buildAutoVehiclePaymentTimeline(vehicle, records, asOf).find(
+    (entry) => entry.status === "current"
+  );
+
+  return current?.date ?? null;
+}
+
 export type PaymentMonthDotStatus = "none" | "paid" | "current" | "upcoming";
 
 export type PaymentMonthDot = {

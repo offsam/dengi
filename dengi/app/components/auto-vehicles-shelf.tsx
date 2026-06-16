@@ -2,8 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useCallback, useState } from "react";
+import { AutoVehicleAddDialog } from "@/app/components/auto-vehicle-add-dialog";
+import { AutoVehicleAddedDialog } from "@/app/components/auto-vehicle-added-dialog";
+import { BubbleAddButton } from "@/app/components/bubble-add-button";
 import { AutoVehiclesCarousel } from "@/app/components/auto-vehicles-carousel";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
+import type { AutoVehicle, AutoVehicleDraft } from "@/lib/auto-vehicles/vehicle";
 
 function Shelf({
   title,
@@ -25,14 +30,7 @@ function Shelf({
           <h2 className="text-sm font-semibold tracking-tight text-zinc-900">{title}</h2>
           {headerAction}
         </div>
-        <button
-          type="button"
-          onClick={onAdd}
-          className="shrink-0 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900"
-          aria-label={onAddLabel}
-        >
-          Добавить
-        </button>
+        <BubbleAddButton ariaLabel={onAddLabel} onClick={onAdd} />
       </div>
       {children}
     </section>
@@ -41,23 +39,65 @@ function Shelf({
 
 export function AutoVehiclesShelf() {
   const router = useRouter();
-  const { activeVehicles } = useAutoVehicles();
+  const { activeVehicles, addVehicle } = useAutoVehicles();
+  const [addOpen, setAddOpen] = useState(false);
+  const [addSession, setAddSession] = useState(0);
+  const [addedVehicle, setAddedVehicle] = useState<AutoVehicle | null>(null);
+
+  const handleContinueToVehicle = useCallback(() => {
+    setAddedVehicle((current) => {
+      if (!current) {
+        return null;
+      }
+
+      router.push(`/auto/${current.id}`);
+      return null;
+    });
+  }, [router]);
+
+  function handleAdd(draft: AutoVehicleDraft) {
+    const saved = addVehicle(draft);
+
+    if (!saved) {
+      return;
+    }
+
+    setAddedVehicle(saved);
+  }
 
   return (
-    <Shelf
-      title="Авто"
-      onAddLabel="Добавить авто"
-      onAdd={() => router.push("/auto/new")}
-      headerAction={
-        <Link
-          href="/auto/archive"
-          className="text-xs font-medium text-zinc-500 underline-offset-2 hover:text-zinc-900 hover:underline"
-        >
-          Архив
-        </Link>
-      }
-    >
-      <AutoVehiclesCarousel vehicles={activeVehicles} />
-    </Shelf>
+    <>
+      <Shelf
+        title="Авто"
+        onAddLabel="Добавить авто"
+        onAdd={() => {
+          setAddSession((current) => current + 1);
+          setAddOpen(true);
+        }}
+        headerAction={
+          <Link
+            href="/auto/archive"
+            className="text-xs font-medium text-zinc-500 underline-offset-2 hover:text-zinc-900 hover:underline"
+          >
+            Архив
+          </Link>
+        }
+      >
+        <AutoVehiclesCarousel vehicles={activeVehicles} />
+      </Shelf>
+
+      <AutoVehicleAddDialog
+        key={addSession}
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onAdd={handleAdd}
+      />
+
+      <AutoVehicleAddedDialog
+        open={addedVehicle != null}
+        vehicle={addedVehicle}
+        onContinue={handleContinueToVehicle}
+      />
+    </>
   );
 }

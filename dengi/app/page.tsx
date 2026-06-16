@@ -1,7 +1,10 @@
 import { AutoVehiclesShelf } from "@/app/components/auto-vehicles-shelf";
+import { BubbleAddButton } from "@/app/components/bubble-add-button";
+import { BubbleCard } from "@/app/components/bubble-card";
 import { CreditCardsShelf } from "@/app/components/credit-cards-shelf";
 import { HomeDashboardSummary } from "@/app/components/home-dashboard-summary";
 import { formatMoneyExact } from "@/lib/format-money";
+import { APP_PAGE_CLASS } from "@/lib/app-theme";
 import {
   DASHBOARD_DEBIT_CASH,
   DASHBOARD_HOUSING_BILLS,
@@ -44,13 +47,7 @@ function Shelf({
         <h2 className="text-sm font-semibold tracking-tight text-zinc-900">
           {title}
         </h2>
-        <button
-          type="button"
-          className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900"
-          aria-label={onAddLabel}
-        >
-          Добавить
-        </button>
+        <BubbleAddButton ariaLabel={onAddLabel} />
       </div>
       {children}
     </section>
@@ -71,7 +68,7 @@ function AccountCard({
   dueDate?: string;
 }) {
   return (
-    <article className="w-44 shrink-0 rounded-2xl border border-zinc-200/80 bg-white p-3 shadow-sm">
+    <BubbleCard className="w-44 shrink-0 p-3">
       <div className="flex items-start gap-2.5">
         <AccountBadge bank={bank} bankColor={bankColor} />
         <div className="min-w-0">
@@ -85,7 +82,7 @@ function AccountCard({
       {dueDate ? (
         <p className="mt-1 text-xs text-zinc-500">Срок {dueDate}</p>
       ) : null}
-    </article>
+    </BubbleCard>
   );
 }
 
@@ -115,7 +112,7 @@ export default function Home() {
   const { debitCash, housingBills } = dashboard;
 
   return (
-    <div className="min-h-full bg-zinc-50 text-zinc-900">
+    <div className={APP_PAGE_CLASS}>
       <main className="mx-auto flex w-full max-w-md flex-col gap-8 px-4 py-6">
         <HomeDashboardSummary />
 
@@ -132,11 +129,11 @@ export default function Home() {
         <AutoVehiclesShelf />
 
         <Shelf title="Жильё и счета" onAddLabel="Добавить счёт">
-          <div className="rounded-2xl border border-zinc-200/80 bg-white px-4 shadow-sm">
+          <BubbleCard className="px-4">
             {housingBills.map((bill) => (
               <BillRow key={bill.id} {...bill} />
             ))}
-          </div>
+          </BubbleCard>
         </Shelf>
       </main>
     </div>

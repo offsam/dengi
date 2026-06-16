@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { AutoVehiclePaymentChart } from "@/app/components/auto-vehicle-payment-chart";
 import { AutoVehiclePaymentTimeline } from "@/app/components/auto-vehicle-payment-timeline";
+import { BubbleAddButton } from "@/app/components/bubble-add-button";
+import { BubbleCard } from "@/app/components/bubble-card";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
 import { useAutoVehicleRecords } from "@/app/hooks/use-auto-vehicle-records";
 import { useClientMounted } from "@/app/hooks/use-client-mounted";
@@ -11,19 +13,18 @@ import {
   buildAutoVehiclePaymentTimeline,
 } from "@/lib/auto-vehicles/records/payment-timeline";
 import { syncAutoVehicleLoanPayments } from "@/lib/auto-vehicles/records/sync-loan-payments";
+import { APP_BUBBLE_BUTTON, APP_BUBBLE_INPUT } from "@/lib/app-theme";
 import type { AutoVehiclePaymentType, AutoVehicleRecord } from "@/lib/auto-vehicles/records/types";
 
 const PAYMENT_LABELS: Record<AutoVehiclePaymentType, string> = {
   loan: "Кредит",
-  extra: "Досрочно",
+  extra: "Досрочный",
   insurance: "Страховка",
 };
 
-const inputClassName =
-  "w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-400";
+const inputClassName = APP_BUBBLE_INPUT;
 
-const panelActionButtonClassName =
-  "inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900";
+const panelActionButtonClassName = APP_BUBBLE_BUTTON;
 
 function toDateInputValue(iso: string) {
   return iso.slice(0, 10);
@@ -62,10 +63,8 @@ function PaymentEditForm({
   }
 
   return (
-    <form
-      className="mx-1 space-y-3 rounded-2xl border border-zinc-200/80 bg-zinc-50/90 p-3"
-      onSubmit={handleSubmit}
-    >
+    <form onSubmit={handleSubmit}>
+      <BubbleCard className="mx-1 space-y-3 p-3">
       <div className="grid grid-cols-2 gap-3">
         <label className="block space-y-1.5">
           <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">Сумма</span>
@@ -116,6 +115,7 @@ function PaymentEditForm({
           Сохранить
         </button>
       </div>
+      </BubbleCard>
     </form>
   );
 }
@@ -226,36 +226,21 @@ export function AutoVehiclePaymentsPanel({
               </svg>
               {chartOpen ? "Список" : "График"}
             </button>
-            <button
-              type="button"
+            <BubbleAddButton
+              ariaLabel={addOpen ? "Закрыть форму добавления" : "Добавить платёж"}
+              active={addOpen}
               onClick={() => {
                 setAddOpen((current) => !current);
                 setChartOpen(false);
               }}
-              className={panelActionButtonClassName}
-              aria-pressed={addOpen}
-            >
-              <svg
-                aria-hidden
-                className="size-3.5"
-                fill="none"
-                viewBox="0 0 16 16"
-                stroke="currentColor"
-                strokeWidth={1.75}
-              >
-                <path d="M8 3.5v9M3.5 8h9" strokeLinecap="round" />
-              </svg>
-              {addOpen ? "Закрыть" : "Добавить платёж"}
-            </button>
+            />
           </div>
         )}
       </div>
 
       {!readOnly && addOpen ? (
-        <form
-          className="shrink-0 space-y-3 rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm"
-          onSubmit={handleAdd}
-        >
+        <form onSubmit={handleAdd}>
+          <BubbleCard className="shrink-0 space-y-3 p-4">
           <label className="block space-y-1.5">
             <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">Тип</span>
             <select
@@ -321,6 +306,7 @@ export function AutoVehiclePaymentsPanel({
           >
             Добавить платёж
           </button>
+          </BubbleCard>
         </form>
       ) : null}
 

@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { BubbleCard } from "@/app/components/bubble-card";
+import { BubbleAddButton } from "@/app/components/bubble-add-button";
 import { useCreditCardTransactions } from "@/app/hooks/use-credit-card-transactions";
 import { UsdAmount } from "@/app/components/usd-amount";
+import { APP_BUBBLE_INPUT } from "@/lib/app-theme";
 import { formatAppDate } from "@/lib/i18n/locale";
 import type { CreditCardTransactionType } from "@/lib/credit-cards/transactions/types";
 
@@ -20,8 +23,7 @@ const TYPE_TONES: Record<CreditCardTransactionType, string> = {
   fee: "text-rose-600",
 };
 
-const inputClassName =
-  "w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-400";
+const inputClassName = APP_BUBBLE_INPUT;
 
 function formatDate(iso: string) {
   return formatAppDate(iso, {
@@ -63,20 +65,16 @@ export function CreditCardTransactionsPanel({ cardId }: { cardId: string }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-zinc-900">Транзакции</p>
-        <button
-          type="button"
+        <BubbleAddButton
+          ariaLabel={open ? "Закрыть форму добавления" : "Добавить транзакцию"}
+          active={open}
           onClick={() => setOpen((current) => !current)}
-          className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900"
-        >
-          {open ? "Закрыть" : "Добавить"}
-        </button>
+        />
       </div>
 
       {open ? (
-        <form
-          className="space-y-3 rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm"
-          onSubmit={handleAdd}
-        >
+        <form onSubmit={handleAdd}>
+          <BubbleCard className="space-y-3 p-4">
           <div className="grid grid-cols-2 gap-3">
             <label className="block space-y-1.5">
               <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
@@ -144,19 +142,20 @@ export function CreditCardTransactionsPanel({ cardId }: { cardId: string }) {
           >
             Добавить транзакцию
           </button>
+          </BubbleCard>
         </form>
       ) : null}
 
       {transactions.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-4 py-8 text-center text-sm text-zinc-500">
+        <BubbleCard className="border-dashed px-4 py-8 text-center text-sm text-zinc-500">
           По этой карте пока нет транзакций.
-        </p>
+        </BubbleCard>
       ) : (
-        <div className="rounded-2xl border border-zinc-200/80 bg-white shadow-sm">
+        <BubbleCard>
           {transactions.map((transaction) => (
             <div
               key={transaction.id}
-              className="flex items-center justify-between gap-3 border-b border-zinc-100 px-4 py-3 last:border-b-0"
+              className="flex items-center justify-between gap-3 border-b border-white/40 px-4 py-3 last:border-b-0"
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-zinc-900">
@@ -175,7 +174,7 @@ export function CreditCardTransactionsPanel({ cardId }: { cardId: string }) {
               </p>
             </div>
           ))}
-        </div>
+        </BubbleCard>
       )}
     </div>
   );

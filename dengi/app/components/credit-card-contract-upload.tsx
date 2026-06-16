@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { BubbleCard } from "@/app/components/bubble-card";
 import { extractContractText } from "@/lib/credit-cards/extract-contract-text";
 import {
   applyParsedTermsToCard,
@@ -147,7 +148,7 @@ export function CreditCardContractUpload({
   }
 
   return (
-    <section className="space-y-4 rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm">
+    <BubbleCard className="space-y-4 p-4">
       <div>
         <h2 className="text-sm font-semibold text-zinc-900">Договор по карте</h2>
         <p className="mt-1 text-xs text-zinc-500">
@@ -227,6 +228,6 @@ export function CreditCardContractUpload({
       />
 
       {error ? <p className="text-xs font-medium text-rose-600">{error}</p> : null}
-    </section>
+    </BubbleCard>
   );
 }
