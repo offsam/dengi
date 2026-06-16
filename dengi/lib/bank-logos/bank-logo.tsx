@@ -19,6 +19,8 @@ type SimpleIconBankId = keyof typeof SIMPLE_ICONS;
 
 type BankLogoProps = {
   bankId: BankId;
+  /** Для bankId === "other" — текст на плитке */
+  displayName?: string;
   /** white — на тёмном фоне мини-карты; brand — фирменный цвет */
   tone?: "white" | "brand";
   className?: string;
@@ -30,19 +32,44 @@ function isSimpleIconBank(bankId: BankId): bankId is SimpleIconBankId {
 
 export function BankLogo({
   bankId,
+  displayName,
   tone = "brand",
   className = "h-4 w-auto",
 }: BankLogoProps) {
   const bank = BANKS[bankId];
 
-  if (!isSimpleIconBank(bankId)) {
+  if (bankId === "other") {
+    const label = displayName?.trim() || "Банк";
+
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={bank.logoPath}
-        alt={bank.name}
-        className={className}
-      />
+      <span
+        className={`inline-flex items-center justify-center rounded-full bg-white/20 px-1.5 text-[10px] font-bold uppercase text-white ${className}`}
+        aria-label={label}
+      >
+        {label.slice(0, 1)}
+      </span>
+    );
+  }
+
+  if (!isSimpleIconBank(bankId)) {
+    if (bank.logoPath) {
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={bank.logoPath}
+          alt={bank.name}
+          className={className}
+        />
+      );
+    }
+
+    return (
+      <span
+        className={`inline-flex items-center justify-center rounded-full bg-white/20 text-[10px] font-bold uppercase text-white ${className}`}
+        aria-label={bank.name}
+      >
+        {bank.name.slice(0, 1)}
+      </span>
     );
   }
 

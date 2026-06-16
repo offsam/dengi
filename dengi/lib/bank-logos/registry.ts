@@ -3,7 +3,9 @@ export type BankId =
   | "americanexpress"
   | "bankofamerica"
   | "wellsfargo"
-  | "citibank";
+  | "citibank"
+  | "discover"
+  | "other";
 
 export type BankMeta = {
   id: BankId;
@@ -52,6 +54,18 @@ export const BANKS: Record<BankId, BankMeta> = {
     logoPath: "/logos/banks/citibank.svg",
     source: "custom",
   },
+  discover: {
+    id: "discover",
+    name: "Discover",
+    cardClass: "from-[#FF6000] to-[#c44800]",
+    source: "custom",
+  },
+  other: {
+    id: "other",
+    name: "Другой",
+    cardClass: "from-zinc-600 to-zinc-900",
+    source: "custom",
+  },
 };
 
 export const POPULAR_BANK_IDS: BankId[] = [
@@ -60,4 +74,5 @@ export const POPULAR_BANK_IDS: BankId[] = [
   "bankofamerica",
   "wellsfargo",
   "citibank",
+  "discover",
 ];
