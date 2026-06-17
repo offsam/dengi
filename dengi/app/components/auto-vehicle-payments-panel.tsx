@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AutoVehiclePaymentChart } from "@/app/components/auto-vehicle-payment-chart";
-import { AutoVehiclePaymentTimeline } from "@/app/components/auto-vehicle-payment-timeline";
+import { AutoVehiclePaymentTimeline, paymentEditFormId } from "@/app/components/auto-vehicle-payment-timeline";
 import { BubbleAddButton } from "@/app/components/bubble-add-button";
 import { BubbleCard } from "@/app/components/bubble-card";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
@@ -32,16 +32,16 @@ function toDateInputValue(iso: string) {
 
 function PaymentEditForm({
   record,
+  formId,
   onSave,
-  onCancel,
 }: {
   record: AutoVehicleRecord;
+  formId: string;
   onSave: (patch: {
     amount: number;
     description: string;
     occurredAt: string;
   }) => void;
-  onCancel: () => void;
 }) {
   const [amount, setAmount] = useState(String(record.amount));
   const [description, setDescription] = useState(record.description);
@@ -63,7 +63,7 @@ function PaymentEditForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form id={formId} onSubmit={handleSubmit}>
       <BubbleCard className="mx-1 space-y-3 p-3">
       <div className="grid grid-cols-2 gap-3">
         <label className="block space-y-1.5">
@@ -99,22 +99,6 @@ function PaymentEditForm({
           onChange={(event) => setDescription(event.target.value)}
         />
       </label>
-
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          className="shrink-0 py-2 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900"
-          onClick={onCancel}
-        >
-          Отмена
-        </button>
-        <button
-          type="submit"
-          className="flex-1 rounded-full bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
-        >
-          Сохранить
-        </button>
-      </div>
       </BubbleCard>
     </form>
   );
@@ -124,10 +108,12 @@ export function AutoVehiclePaymentsPanel({
   vehicleId,
   readOnly = false,
   expanded = false,
+  onHeroCompress,
 }: {
   vehicleId: string;
   readOnly?: boolean;
   expanded?: boolean;
+  onHeroCompress?: (compress: number) => void;
 }) {
   const mounted = useClientMounted();
   const { getVehicle } = useAutoVehicles();
@@ -319,10 +305,12 @@ export function AutoVehiclePaymentsPanel({
           expanded={expanded}
           editingId={editingId}
           onEdit={(record) => setEditingId(record.id)}
+          onCancelEdit={() => setEditingId(null)}
+          onHeroCompress={onHeroCompress}
           editForm={(record) => (
             <PaymentEditForm
+              formId={paymentEditFormId(record.id)}
               record={record}
-              onCancel={() => setEditingId(null)}
               onSave={(patch) => handleSaveEdit(record, patch)}
             />
           )}

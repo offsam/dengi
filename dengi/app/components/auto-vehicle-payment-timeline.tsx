@@ -1,20 +1,31 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import {
+  CheckIcon,
+  CloseIcon,
+  inlineEditIconButtonClassName,
+  PencilIcon,
+} from "@/app/components/inline-edit-icons";
 import { UsdAmount } from "@/app/components/usd-amount";
 import { BubbleCard } from "@/app/components/bubble-card";
-import { BubbleInsetOverlay } from "@/app/components/bubble-inset-overlay";
 import { formatAppDate } from "@/lib/i18n/locale";
+import { paymentAmountStyle } from "@/lib/auto-vehicles/payment-status-colors";
 import type { AutoVehiclePaymentType } from "@/lib/auto-vehicles/records/types";
 import type { PaymentTimelineEntry } from "@/lib/auto-vehicles/records/payment-timeline";
 import { formatDaysUntilPayment } from "@/lib/auto-vehicles/records/payment-timeline";
 import type { AutoVehicleRecord } from "@/lib/auto-vehicles/records/types";
+import { PAYMENTS_HERO_COMPRESS_MAX_PX } from "@/lib/auto-vehicles/credit-stats-layout";
 
 const PAYMENT_LABELS: Record<AutoVehiclePaymentType, string> = {
   loan: "Кредит",
   extra: "Досрочный",
   insurance: "Страховка",
 };
+
+export function paymentEditFormId(recordId: string) {
+  return `payment-edit-${recordId}`;
+}
 
 /** Отступ пузыря от краёв области прокрутки */
 const BUBBLE_PIN_INSET_PX = 6;
@@ -35,11 +46,10 @@ function CurrentPaymentBubble({ entry }: { entry: PaymentTimelineEntry }) {
   const daysLabel = formatDaysUntil(entry.date);
 
   return (
-    <BubbleCard className="isolate px-3.5 py-2.5">
-      <BubbleInsetOverlay rounded="2xl" />
-      <div className="relative z-[1] flex items-start justify-between gap-3">
+    <BubbleCard variant="glass" className="px-3.5 py-2.5">
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <span className="mb-1 inline-block rounded-full bg-zinc-900/[0.08] px-2.5 py-0.5 text-[11px] font-semibold text-zinc-600 shadow-[inset_0_1px_3px_rgba(55,50,45,0.12)]">
+          <span className="mb-1 inline-block rounded-full border border-white/60 bg-white/20 px-2.5 py-0.5 text-[11px] font-semibold text-zinc-600">
             {daysLabel}
           </span>
           <p className="truncate text-[15px] font-semibold leading-snug text-zinc-900">
@@ -51,8 +61,11 @@ function CurrentPaymentBubble({ entry }: { entry: PaymentTimelineEntry }) {
           </p>
         </div>
 
-        <p className="shrink-0 self-center text-lg font-bold tabular-nums leading-none text-zinc-900">
-          <UsdAmount amount={entry.amount} exact />
+        <p
+          className="shrink-0 self-center text-lg font-bold tabular-nums leading-none"
+          style={paymentAmountStyle("current")}
+        >
+          <UsdAmount amount={entry.amount} exact className="text-inherit" />
         </p>
       </div>
     </BubbleCard>
@@ -61,9 +74,9 @@ function CurrentPaymentBubble({ entry }: { entry: PaymentTimelineEntry }) {
 
 function LoanPaidMessage() {
   return (
-    <p className="rounded-2xl border border-zinc-200/60 bg-white/55 px-3 py-2 text-center text-xs text-zinc-600 backdrop-blur-md">
-      Кредит погашен
-    </p>
+    <BubbleCard variant="glass" className="px-3 py-2 text-center">
+      <p className="text-xs text-zinc-600">Кредит погашен</p>
+    </BubbleCard>
   );
 }
 
@@ -71,23 +84,23 @@ function PaymentTimelineRow({
   entry,
   readOnly,
   isEditing,
+  editFormId,
   onEdit,
+  onCancel,
 }: {
   entry: PaymentTimelineEntry;
   readOnly: boolean;
   isEditing: boolean;
+  editFormId?: string;
   onEdit: () => void;
+  onCancel: () => void;
 }) {
   const isPaid = entry.status === "paid";
   const isUpcoming = entry.status === "upcoming";
+  const amountStatus = isPaid ? "paid" : isUpcoming ? "upcoming" : "current";
 
   return (
-    <div
-      data-payment-status={entry.status}
-      className={`flex items-center justify-between gap-3 px-3 py-2.5 transition-all ${
-        isUpcoming ? "opacity-40" : ""
-      }`}
-    >
+    <div data-payment-status={entry.status} className="flex items-center justify-between gap-3 px-3 py-2.5 transition-all">
       <div className="min-w-0">
         <p
           className={`truncate text-sm font-medium ${
@@ -102,23 +115,45 @@ function PaymentTimelineRow({
         </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1">
         <p className="text-sm font-semibold tabular-nums">
           <UsdAmount
             amount={entry.amount}
             exact
-            tone={isPaid ? "positive" : "neutral"}
-            className={isUpcoming ? "text-zinc-500" : ""}
+            className="text-inherit"
+            style={paymentAmountStyle(amountStatus)}
           />
         </p>
-        {!readOnly && isPaid && entry.record && !isEditing ? (
-          <button
-            type="button"
-            className="text-xs font-medium text-zinc-500 underline-offset-2 hover:text-zinc-900 hover:underline"
-            onClick={onEdit}
-          >
-            Изменить
-          </button>
+        {!readOnly && isPaid && entry.record ? (
+          isEditing ? (
+            <>
+              <button
+                type="submit"
+                form={editFormId}
+                className={`${inlineEditIconButtonClassName} text-[#5DAA8C] hover:bg-[#5DAA8C]/10 hover:text-[#48946F]`}
+                aria-label="Сохранить"
+              >
+                <CheckIcon />
+              </button>
+              <button
+                type="button"
+                className={inlineEditIconButtonClassName}
+                aria-label="Отменить"
+                onClick={onCancel}
+              >
+                <CloseIcon />
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className={inlineEditIconButtonClassName}
+              aria-label="Изменить"
+              onClick={onEdit}
+            >
+              <PencilIcon />
+            </button>
+          )
         ) : null}
       </div>
     </div>
@@ -160,20 +195,34 @@ export function AutoVehiclePaymentTimeline({
   readOnly,
   editingId,
   onEdit,
+  onCancelEdit,
   editForm,
   expanded = false,
+  onHeroCompress,
 }: {
   entries: PaymentTimelineEntry[];
   readOnly: boolean;
   editingId: string | null;
   onEdit: (record: AutoVehicleRecord) => void;
+  onCancelEdit: () => void;
   editForm: (record: AutoVehicleRecord) => React.ReactNode;
   expanded?: boolean;
+  /** 0–1: пузырь упёрся вверх и «толкает» hero-машину */
+  onHeroCompress?: (compress: number) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const currentAnchorRef = useRef<HTMLDivElement>(null);
   const bubbleOverlayRef = useRef<HTMLDivElement>(null);
+  const lastCompressRef = useRef(-1);
+  const lastCenterKeyRef = useRef<string | null>(null);
+  const lastExpandedRef = useRef(expanded);
+
+  const scrollAnchorKey = useMemo(() => {
+    const currentEntry = entries.find((entry) => entry.status === "current");
+
+    return `${entries.length}:${currentEntry?.key ?? "none"}`;
+  }, [entries]);
 
   const { upcoming, current, paid } = useMemo(() => {
     return {
@@ -194,22 +243,42 @@ export function AutoVehiclePaymentTimeline({
 
     const containerRect = container.getBoundingClientRect();
     const anchorRect = anchor.getBoundingClientRect();
-    const bubbleHeight = bubble.offsetHeight;
+    const fullHeight = anchor.offsetHeight;
+
+    if (fullHeight <= 0) {
+      return;
+    }
+
     const anchorCenterY =
       anchorRect.top - containerRect.top + anchorRect.height / 2;
 
     const minTop = BUBBLE_PIN_INSET_PX;
+    const idealTop = anchorCenterY - fullHeight / 2;
+    let top = idealTop;
+    let compress = 0;
+
+    if (idealTop < minTop) {
+      top = minTop;
+      compress = Math.min(
+        1,
+        (minTop - idealTop) / PAYMENTS_HERO_COMPRESS_MAX_PX
+      );
+    }
+
     const maxTop = Math.max(
       minTop,
-      containerRect.height - bubbleHeight - BUBBLE_PIN_INSET_PX
+      containerRect.height - fullHeight - BUBBLE_PIN_INSET_PX
     );
-    const nextTop = Math.min(
-      maxTop,
-      Math.max(minTop, anchorCenterY - bubbleHeight / 2)
-    );
+    top = Math.min(maxTop, Math.max(minTop, top));
 
-    bubble.style.top = `${nextTop}px`;
-  }, []);
+    bubble.style.top = `${top}px`;
+
+    const roundedCompress = Math.round(compress * 1000) / 1000;
+    if (onHeroCompress && roundedCompress !== lastCompressRef.current) {
+      lastCompressRef.current = roundedCompress;
+      onHeroCompress(roundedCompress);
+    }
+  }, [onHeroCompress]);
 
   useLayoutEffect(() => {
     const container = scrollRef.current;
@@ -219,9 +288,20 @@ export function AutoVehiclePaymentTimeline({
       return;
     }
 
-    centerScrollOnAnchor(container, anchor);
+    const shouldCenter =
+      lastCenterKeyRef.current !== scrollAnchorKey ||
+      lastExpandedRef.current !== expanded ||
+      lastCenterKeyRef.current === null;
+
+    lastCenterKeyRef.current = scrollAnchorKey;
+    lastExpandedRef.current = expanded;
+
+    if (shouldCenter) {
+      centerScrollOnAnchor(container, anchor);
+    }
+
     updateBubblePosition();
-  }, [entries, editingId, expanded, updateBubblePosition]);
+  }, [scrollAnchorKey, editingId, expanded, updateBubblePosition]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -252,8 +332,10 @@ export function AutoVehiclePaymentTimeline({
       scroll.removeEventListener("scroll", scheduleUpdate);
       window.removeEventListener("resize", scheduleUpdate);
       resizeObserver.disconnect();
+      lastCompressRef.current = -1;
+      onHeroCompress?.(0);
     };
-  }, [updateBubblePosition, entries.length]);
+  }, [onHeroCompress, updateBubblePosition, scrollAnchorKey]);
 
   if (entries.length === 0) {
     return (
@@ -281,6 +363,7 @@ export function AutoVehiclePaymentTimeline({
               readOnly={readOnly}
               isEditing={false}
               onEdit={() => {}}
+              onCancel={() => {}}
             />
           ))}
 
@@ -298,6 +381,7 @@ export function AutoVehiclePaymentTimeline({
 
           {paid.map((entry) => {
             const isEditing = entry.record ? editingId === entry.record.id : false;
+            const formId = entry.record ? paymentEditFormId(entry.record.id) : undefined;
 
             return (
               <div key={entry.key}>
@@ -305,11 +389,13 @@ export function AutoVehiclePaymentTimeline({
                   entry={entry}
                   readOnly={readOnly}
                   isEditing={isEditing}
+                  editFormId={formId}
                   onEdit={() => {
                     if (entry.record) {
                       onEdit(entry.record);
                     }
                   }}
+                  onCancel={onCancelEdit}
                 />
                 {!readOnly && isEditing && entry.record ? editForm(entry.record) : null}
               </div>

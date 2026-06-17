@@ -1,19 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { BubbleCard } from "@/app/components/bubble-card";
+import { useState } from "react";
+import { BubbleAddDialog } from "@/app/components/bubble-add-dialog";
 import { CreditCardFormFields } from "@/app/components/credit-card-form-fields";
 import { CreditCardTile } from "@/app/components/credit-card-tile";
 import { isOtherBank } from "@/lib/bank-logos";
 import {
-  createEmptyCreditCardDraft,
+  createEmptyCreditCardAddDraft,
   draftToPreviewCard,
+  type CreditCardAddDraft,
 } from "@/lib/credit-cards/defaults";
+import {
+  creditCardValidationMessage,
+  normalizeCreditCardForPersist,
+  validateCreditCardDraft,
+} from "@/lib/credit-cards/normalize";
 import type { CreditCard, CreditCardDraft } from "@/lib/credit-cards/types";
-
-function draftToFormCard(draft: CreditCardDraft): CreditCard {
-  return { ...draft, id: "preview" };
-}
 
 export function CreditCardAddDialog({
   open,
@@ -24,110 +26,65 @@ export function CreditCardAddDialog({
   onClose: () => void;
   onAdd: (draft: CreditCardDraft) => void;
 }) {
-  const [draft, setDraft] = useState(createEmptyCreditCardDraft);
+  const [draft, setDraft] = useState(createEmptyCreditCardAddDraft);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    }
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", onKeyDown);
-
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open, onClose]);
-
-  if (!open) {
-    return null;
-  }
-
-  function patchDraft(patch: Partial<CreditCardDraft>) {
+  function patchDraft(patch: Partial<CreditCardAddDraft>) {
     setDraft((current) => ({ ...current, ...patch }));
+    setError(null);
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const customBankName = isOtherBank(draft.bankId)
-      ? draft.customBankName?.trim()
-      : undefined;
-
-    if (isOtherBank(draft.bankId) && !customBankName) {
+    const issue = validateCreditCardDraft(draft);
+    if (issue) {
+      setError(creditCardValidationMessage(issue));
       return;
     }
 
-    onAdd({
-      ...draft,
-      name: draft.name.trim(),
-      dueDate: draft.dueDate.trim(),
-      customBankName,
-    });
+    if (!draft.bankId) {
+      setError(creditCardValidationMessage("bank"));
+      return;
+    }
+
+    const bankId = draft.bankId;
+    const customBankName = isOtherBank(bankId)
+      ? draft.customBankName?.trim()
+      : undefined;
+
+    onAdd(
+      normalizeCreditCardForPersist({
+        ...draft,
+        bankId,
+        customBankName,
+      })
+    );
     onClose();
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="add-card-title"
+    <BubbleAddDialog
+      open={open}
+      onClose={onClose}
+      title="Добавить карту"
+      titleId="add-card-title"
+      closeAriaLabel="Закрыть окно добавления карты"
+      submitLabel="Добавить карту"
+      onSubmit={handleSubmit}
+      preview={<CreditCardTile {...draftToPreviewCard(draft)} />}
     >
-      <button
-        type="button"
-        className="absolute inset-0 bg-black/40"
-        aria-label="Закрыть окно добавления карты"
-        onClick={onClose}
+      <CreditCardFormFields
+        draft={{ ...draft, id: "preview" } as CreditCard}
+        onPatch={patchDraft}
+        addFlow
       />
 
-      <BubbleCard className="relative flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl rounded-b-none">
-        <div className="shrink-0 border-b border-white/40 px-4 py-4">
-          <div className="flex items-center justify-between gap-3">
-            <h2
-              id="add-card-title"
-              className="text-sm font-semibold tracking-tight text-zinc-900"
-            >
-              Добавить карту
-            </h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full px-2 py-1 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-900"
-            >
-              Отмена
-            </button>
-          </div>
-
-          <div className="mt-4 flex justify-center">
-            <CreditCardTile {...draftToPreviewCard(draft)} />
-          </div>
-        </div>
-
-        <form
-          className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-4"
-          onSubmit={handleSubmit}
-        >
-          <CreditCardFormFields
-            draft={draftToFormCard(draft)}
-            onPatch={patchDraft}
-          />
-
-          <button
-            type="submit"
-            className="w-full rounded-full bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
-          >
-            Добавить карту
-          </button>
-        </form>
-      </BubbleCard>
-    </div>
+      {error ? (
+        <p className="text-sm font-medium text-rose-600" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </BubbleAddDialog>
   );
 }

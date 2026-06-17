@@ -3,6 +3,7 @@
  */
 
 export {
+  BODY_TYPE_ICON_COUNT,
   BODY_TYPE_ICONS,
   getBodyTypeIconLocalUrl,
   resolveBodyTypeIcon,
@@ -36,8 +37,17 @@ export function getCarIconRemoteUrl(fileName: string) {
 }
 
 /** Локальный URL → Supabase (fallback) */
-export function getBodyTypeIconUrlCandidates(fileName: string) {
-  const local = `/car-icons/${encodeURIComponent(fileName)}`;
+export function getBodyTypeIconUrlCandidates(
+  fileName: string,
+  variant: "default" | "progress" = "default"
+) {
+  const folder = variant === "progress" ? "car-icons/progress" : "car-icons";
+  const local = `/${folder}/${encodeURIComponent(fileName)}`;
+
+  if (variant === "progress") {
+    return [local];
+  }
+
   const remote = getCarIconRemoteUrl(fileName);
   return remote ? [local, remote] : [local];
 }

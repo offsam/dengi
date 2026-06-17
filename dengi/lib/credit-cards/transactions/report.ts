@@ -148,6 +148,10 @@ export type MonthlyDebtEntry = {
   label: string;
   subtitle?: string;
   debt: number;
+  /** Значение введено вручную, а не посчитано по транзакциям */
+  isManual?: boolean;
+  /** Изменение к более раннему месяцу: + рост, − снижение */
+  deltaFromPreviousMonth: number | null;
 };
 
 export const MAX_MONTHLY_DEBT_HISTORY = 10;
@@ -198,7 +202,8 @@ function balanceAsOf(
 export function buildMonthlyDebtHistory(
   currentBalance: number,
   transactions: CreditCardTransaction[],
-  maxMonths = MAX_MONTHLY_DEBT_HISTORY
+  maxMonths = MAX_MONTHLY_DEBT_HISTORY,
+  manualBalances: Record<string, number> = {}
 ): MonthlyDebtEntry[] {
   const now = new Date();
   const entries: MonthlyDebtEntry[] = [];
@@ -207,17 +212,29 @@ export function buildMonthlyDebtHistory(
     const monthDate = new Date(now.getFullYear(), now.getMonth() - index, 1);
     const isCurrentMonth = index === 0;
     const asOf = isCurrentMonth ? now : endOfMonth(monthDate);
-    const debt = balanceAsOf(currentBalance, transactions, asOf);
+    const computedDebt = balanceAsOf(currentBalance, transactions, asOf);
+    const monthId = `${monthDate.getFullYear()}-${monthDate.getMonth()}`;
+    const manualDebt = manualBalances[monthId];
+    const hasManual = !isCurrentMonth && manualDebt !== undefined;
+    const debt = hasManual ? manualDebt : computedDebt;
 
     entries.push({
-      id: `${monthDate.getFullYear()}-${monthDate.getMonth()}`,
+      id: monthId,
       label: formatMonthYear(monthDate),
-      subtitle: isCurrentMonth ? "Сегодня" : undefined,
+      subtitle: isCurrentMonth ? "Сегодня" : hasManual ? "Вручную" : undefined,
       debt,
+      isManual: hasManual,
+      deltaFromPreviousMonth: null,
     });
   }
 
-  return entries;
+  return entries.map((entry, index) => {
+    const olderMonth = entries[index + 1];
+    return {
+      ...entry,
+      deltaFromPreviousMonth: olderMonth ? entry.debt - olderMonth.debt : null,
+    };
+  });
 }
 
 export function summarizeTransactionsForMonth(
@@ -233,4 +250,36 @@ export function summarizeTransactionsForMonth(
       return occurredAt >= start && occurredAt <= end;
     })
   );
+}
+
+export type StatementCloseComparison = {
+  monthLabel: string;
+  closedBalance: number;
+  deltaFromPriorMonth: number;
+};
+
+/** Закрытие выписки в прошлом месяце и изменение к месяцу перед ним */
+export function computePreviousStatementCloseComparison(
+  currentBalance: number,
+  transactions: CreditCardTransaction[],
+  manualBalances: Record<string, number> = {}
+): StatementCloseComparison | null {
+  const history = buildMonthlyDebtHistory(
+    currentBalance,
+    transactions,
+    3,
+    manualBalances
+  );
+  const previousMonth = history[1];
+  const monthBeforePrevious = history[2];
+
+  if (!previousMonth || !monthBeforePrevious) {
+    return null;
+  }
+
+  return {
+    monthLabel: previousMonth.label,
+    closedBalance: previousMonth.debt,
+    deltaFromPriorMonth: previousMonth.debt - monthBeforePrevious.debt,
+  };
 }

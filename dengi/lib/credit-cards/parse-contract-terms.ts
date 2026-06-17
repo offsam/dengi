@@ -156,7 +156,7 @@ function normalizeText(text: string) {
   return text.replace(/\s+/g, " ").trim();
 }
 
-function findTermByKey(terms: ContractTerm[], key: string) {
+export function findTermByKey(terms: ContractTerm[], key: string) {
   return terms.find((term) => term.id.startsWith(`${key}-`)) ?? null;
 }
 
@@ -197,7 +197,6 @@ export function applyParsedTermsToCard(
   card: {
     apr: number;
     limit: number;
-    minPayment: number;
   },
   terms: ContractTerm[]
 ) {
@@ -218,14 +217,6 @@ export function applyParsedTermsToCard(
     const parsed = Number(limitTerm.value.replace(/[^\d.,-]/g, "").replace(",", ""));
     if (Number.isFinite(parsed)) {
       patch.limit = parsed;
-    }
-  }
-
-  const minTerm = findTermByKey(terms, "minimum_payment");
-  if (minTerm) {
-    const parsed = Number(minTerm.value.replace(/[^\d.,-]/g, "").replace(",", ""));
-    if (Number.isFinite(parsed)) {
-      patch.minPayment = parsed;
     }
   }
 

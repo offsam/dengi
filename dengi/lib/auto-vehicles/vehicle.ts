@@ -82,6 +82,12 @@ export type AutoVehicle = {
   remaining: number;
   /** Пробег, мили */
   mileage: number;
+  /** Страховая компания */
+  insuranceProviderName?: string;
+  /** Сумма платежа — monthly или annual в зависимости от insuranceBillingPeriod */
+  insurancePaymentAmount?: number;
+  /** monthly — insurancePaymentAmount в месяц; annual — в год (в расчётах /12) */
+  insuranceBillingPeriod?: "monthly" | "annual";
 };
 
 export type AutoVehicleDraft = Omit<AutoVehicle, "id">;

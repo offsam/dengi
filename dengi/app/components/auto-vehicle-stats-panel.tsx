@@ -8,6 +8,19 @@ import { useAutoVehicleRecords } from "@/app/hooks/use-auto-vehicle-records";
 import { computeAutoVehicleLoanStats } from "@/lib/auto-vehicles/records/loan-stats";
 import { computeAutoVehicleExpensePeriodTotals } from "@/lib/auto-vehicles/records/expense-stats";
 import {
+  CREDIT_STATS_GENERAL_GRID_CLASS_NAME,
+  CREDIT_STATS_GENERAL_AMOUNT_NEUTRAL,
+  CREDIT_STATS_GENERAL_LABEL_CLASS_NAME,
+  CREDIT_STATS_GENERAL_META_CLASS_NAME,
+  CREDIT_STATS_LOAN_PLAQUE_GAP_PX,
+  CREDIT_STATS_NOW_SECTION_OFFSET_PX,
+  shouldShowCreditVehicleStats,
+} from "@/lib/auto-vehicles/credit-stats-layout";
+import {
+  formatInsuranceProviderLabel,
+  resolveAutoVehicleInsuranceSnapshot,
+} from "@/lib/auto-vehicles/records/insurance-stats";
+import {
   formatNextPaymentSubline,
   resolveNextLoanPaymentDate,
 } from "@/lib/auto-vehicles/records/payment-timeline";
@@ -62,23 +75,36 @@ function StatCellColumn({
   value,
   meta,
   tone = "neutral",
+  variant = "default",
 }: {
   label: string;
   value: React.ReactNode;
   meta?: React.ReactNode;
   tone?: StatTone;
+  variant?: "default" | "general";
 }) {
-  const valueClassName = amountClassForTone(tone);
+  const valueClassName =
+    variant === "general" && tone === "neutral"
+      ? CREDIT_STATS_GENERAL_AMOUNT_NEUTRAL
+      : amountClassForTone(tone);
+  const labelClassName =
+    variant === "general"
+      ? CREDIT_STATS_GENERAL_LABEL_CLASS_NAME
+      : "text-[10px] leading-tight text-zinc-500";
+  const metaClassName =
+    variant === "general"
+      ? CREDIT_STATS_GENERAL_META_CLASS_NAME
+      : "max-w-full truncate text-[10px] font-medium leading-tight text-zinc-500";
 
   return (
     <div className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 py-2 text-center">
-      <p className="text-[10px] leading-tight text-zinc-500">{label}</p>
+      <p className={labelClassName}>{label}</p>
       {typeof value === "string" || typeof value === "number" ? (
         <p className={valueClassName}>{value}</p>
       ) : (
         value
       )}
-      {meta ? <p className="text-[10px] font-medium leading-tight text-zinc-500">{meta}</p> : null}
+      {meta ? <p className={metaClassName}>{meta}</p> : null}
     </div>
   );
 }
@@ -88,15 +114,23 @@ function StatPlaque({
   value,
   subValue,
   tone = "neutral",
+  variant = "default",
 }: {
   label: string;
   value: React.ReactNode;
   subValue?: React.ReactNode;
   tone?: StatTone;
+  variant?: "default" | "general";
 }) {
   return (
     <AutoVehicleDetailBubbleCard>
-      <StatCellColumn label={label} value={value} meta={subValue} tone={tone} />
+      <StatCellColumn
+        label={label}
+        value={value}
+        meta={subValue}
+        tone={tone}
+        variant={variant}
+      />
     </AutoVehicleDetailBubbleCard>
   );
 }
@@ -201,8 +235,8 @@ export function AutoVehicleStatsPanel({ vehicle }: { vehicle: AutoVehicle }) {
   );
 
   const expenseTotals = useMemo(
-    () => computeAutoVehicleExpensePeriodTotals(allVehicleRecords),
-    [allVehicleRecords]
+    () => computeAutoVehicleExpensePeriodTotals(vehicle, allVehicleRecords),
+    [vehicle, allVehicleRecords]
   );
 
   const loanEndDate = useMemo(() => resolveLoanEndDate(vehicle), [vehicle]);
@@ -217,26 +251,43 @@ export function AutoVehicleStatsPanel({ vehicle }: { vehicle: AutoVehicle }) {
     return formatNextPaymentSubline(nextDate);
   }, [vehicle, allVehicleRecords]);
 
-  const showLoan =
-    vehicle.financingType !== "cash" &&
-    (stats.loanAmount > 0 || stats.monthlyPayment > 0 || stats.paymentsTotal > 0);
+  const showLoan = shouldShowCreditVehicleStats(vehicle);
+
+  const insuranceSnapshot = useMemo(
+    () => resolveAutoVehicleInsuranceSnapshot(vehicle, allVehicleRecords),
+    [vehicle, allVehicleRecords]
+  );
+
+  const insuranceProviderLabel = insuranceSnapshot
+    ? formatInsuranceProviderLabel(insuranceSnapshot.providerName)
+    : undefined;
 
   return (
     <div className="space-y-5">
       <StatSection title="Общее">
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className={CREDIT_STATS_GENERAL_GRID_CLASS_NAME}>
           <StatPlaque
+            variant="general"
             label="Сумма покупки"
             value={
-              <UsdAmount amount={stats.purchasePrice} exact className={AUTO_VEHICLE_STAT_AMOUNT_NEUTRAL} />
+              <UsdAmount
+                amount={stats.purchasePrice}
+                exact
+                className={CREDIT_STATS_GENERAL_AMOUNT_NEUTRAL}
+              />
             }
             subValue={formatAppDateNumeric(vehicle.purchaseDate)}
           />
           <StatPlaque
+            variant="general"
             label="Месячный платёж"
             value={
               showLoan ? (
-                <UsdAmount amount={stats.monthlyPayment} exact className={AUTO_VEHICLE_STAT_AMOUNT_NEUTRAL} />
+                <UsdAmount
+                  amount={stats.monthlyPayment}
+                  exact
+                  className={CREDIT_STATS_GENERAL_AMOUNT_NEUTRAL}
+                />
               ) : (
                 "—"
               )
@@ -244,17 +295,34 @@ export function AutoVehicleStatsPanel({ vehicle }: { vehicle: AutoVehicle }) {
             subValue={showLoan ? formatPaymentDayLabel(resolveLoanPaymentDay(vehicle)) : undefined}
           />
           <StatPlaque
+            variant="general"
             label="Ставка"
             value={showLoan ? formatRatePercent(stats.annualRatePercent) : "—"}
+          />
+          <StatPlaque
+            variant="general"
+            label="Страховка"
+            value={
+              insuranceSnapshot ? (
+                <UsdAmount
+                  amount={insuranceSnapshot.monthlyPayment}
+                  exact
+                  className={CREDIT_STATS_GENERAL_AMOUNT_NEUTRAL}
+                />
+              ) : (
+                "—"
+              )
+            }
+            subValue={insuranceProviderLabel}
           />
         </div>
       </StatSection>
 
       {showLoan ? (
         <StatSection title="Сейчас" dense>
-          <div className="-mt-5">
+          <div style={{ marginTop: CREDIT_STATS_NOW_SECTION_OFFSET_PX }}>
             <AutoVehicleLoanPaidProgress vehicle={vehicle} />
-            <div className="mt-0">
+            <div style={{ marginTop: CREDIT_STATS_LOAN_PLAQUE_GAP_PX }}>
               <CurrentLoanPlaque
               remaining={stats.remaining}
               totalPaid={stats.totalPaid}

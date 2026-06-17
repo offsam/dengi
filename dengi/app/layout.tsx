@@ -15,7 +15,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" className={`${switzer.variable} h-full antialiased`}>
-      <body className={`${switzer.className} min-h-full flex flex-col font-sans`}>
+      <body
+        suppressHydrationWarning
+        className={`${switzer.className} min-h-full flex flex-col font-sans`}
+      >
         <AppShell>{children}</AppShell>
       </body>
     </html>

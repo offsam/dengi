@@ -1,5 +1,8 @@
 import { AutoVehicleVisual } from "@/app/components/auto-vehicle-visual";
 import { buildVehicleDisplayHeading } from "@/lib/auto-vehicles";
+import {
+  resolvePaymentsHeroScale,
+} from "@/lib/auto-vehicles/credit-stats-layout";
 import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
 
 /** Машина без плашки — «парит» над фоном страницы */
@@ -8,14 +11,50 @@ export function AutoVehicleDetailHero({
   compact = false,
   large = false,
   statsLayout = false,
+  heroCompress = 0,
 }: {
   vehicle: AutoVehicle;
   compact?: boolean;
   large?: boolean;
   statsLayout?: boolean;
+  /** 0–1: сжатие hero на вкладке платежей при прокрутке */
+  heroCompress?: number;
 }) {
   const heading = buildVehicleDisplayHeading(vehicle.catalogId, vehicle.year);
   const variant = compact ? "compact" : large && statsLayout ? "heroStats" : large ? "hero" : "float";
+
+  if (large && statsLayout) {
+    const scale = resolvePaymentsHeroScale(heroCompress);
+
+    return (
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-0 overflow-visible"
+        aria-label={
+          heading.secondary ? `${heading.primary} ${heading.secondary}` : heading.primary
+        }
+      >
+        <div className="absolute inset-x-0 top-0 flex justify-center overflow-visible">
+          <div
+            className="relative origin-top will-change-transform"
+            style={{ transform: `scale(${scale})` }}
+          >
+            <div
+              className="pointer-events-none absolute bottom-0 left-1/2 h-3 w-40 -translate-x-1/2 rounded-full bg-zinc-900/10 blur-md"
+              aria-hidden
+            />
+            <AutoVehicleVisual
+              variant={variant}
+              catalogId={vehicle.catalogId}
+              bodyIconId={vehicle.bodyIconId}
+              year={vehicle.year}
+              bodyColorHex={vehicle.bodyColorHex}
+              wheelColorHex={vehicle.wheelColorHex}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -35,7 +74,9 @@ export function AutoVehicleDetailHero({
           compact
             ? "h-1.5 w-14 bg-zinc-900/12"
             : large
-              ? "h-3 w-28 bg-zinc-900/10"
+              ? statsLayout
+                ? "h-3 w-40 bg-zinc-900/10"
+                : "h-3 w-28 bg-zinc-900/10"
               : "h-2 w-20 bg-zinc-900/12"
         }`}
         aria-hidden

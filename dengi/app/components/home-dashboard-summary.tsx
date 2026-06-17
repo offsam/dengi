@@ -1,25 +1,30 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo } from "react";
 import { BubbleCard } from "@/app/components/bubble-card";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
 import { useCreditCards } from "@/app/hooks/use-credit-cards";
+import { useDebitCashAccounts } from "@/app/hooks/use-debit-cash-accounts";
+import { useHousingBills } from "@/app/hooks/use-housing-bills";
 import { formatMoney, formatMoneyExact } from "@/lib/format-money";
 import { computeDashboardMetrics } from "@/lib/dashboard/compute-metrics";
-import { isActiveAutoVehicle } from "@/lib/auto-vehicles/status";
 import {
-  DASHBOARD_DEBIT_CASH,
-  DASHBOARD_HOUSING_BILLS,
-} from "@/lib/dashboard/seed";
+  dashboardMetricHref,
+  type DashboardMetricId,
+} from "@/lib/dashboard/metric-breakdown";
+import { isActiveAutoVehicle } from "@/lib/auto-vehicles/status";
 
 function MetricCard({
   label,
   value,
   tone = "neutral",
+  metricId,
 }: {
   label: string;
   value: string;
   tone?: "neutral" | "danger" | "positive";
+  metricId: DashboardMetricId;
 }) {
   const valueTone =
     tone === "danger"
@@ -29,31 +34,44 @@ function MetricCard({
         : "text-zinc-900";
 
   return (
-    <BubbleCard className="px-3 py-3">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">{label}</p>
-      <p className={`mt-1 text-lg font-semibold tabular-nums ${valueTone}`}>{value}</p>
-    </BubbleCard>
+    <Link
+      href={dashboardMetricHref(metricId)}
+      className="block text-left transition-transform active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
+      aria-label={`${label}: ${value}. Открыть состав`}
+    >
+      <BubbleCard className="px-3 py-3">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">{label}</p>
+        <p className={`mt-1 text-lg font-semibold tabular-nums ${valueTone}`}>{value}</p>
+      </BubbleCard>
+    </Link>
   );
 }
 
 export function HomeDashboardSummary() {
   const { cards } = useCreditCards();
   const { vehicles } = useAutoVehicles();
+  const { accounts: debitAccounts } = useDebitCashAccounts();
+  const { bills } = useHousingBills();
+
+  const activeVehicles = useMemo(
+    () => vehicles.filter(isActiveAutoVehicle),
+    [vehicles]
+  );
 
   const billsDueSoon = useMemo(
-    () => DASHBOARD_HOUSING_BILLS.reduce((sum, bill) => sum + bill.amount, 0),
-    []
+    () => bills.reduce((sum, bill) => sum + bill.amount, 0),
+    [bills]
   );
 
   const metrics = useMemo(
     () =>
       computeDashboardMetrics({
         cards,
-        vehicles: vehicles.filter(isActiveAutoVehicle),
-        debitAccounts: DASHBOARD_DEBIT_CASH,
+        vehicles: activeVehicles,
+        debitAccounts,
         billsDueSoon,
       }),
-    [cards, vehicles, billsDueSoon]
+    [cards, activeVehicles, debitAccounts, billsDueSoon]
   );
 
   return (
@@ -75,20 +93,24 @@ export function HomeDashboardSummary() {
           label="Общий долг"
           value={formatMoney(metrics.totalDebt)}
           tone="danger"
+          metricId="totalDebt"
         />
         <MetricCard
           label="Проценты за месяц"
           value={formatMoneyExact(metrics.interestThisMonth)}
           tone="danger"
+          metricId="interestThisMonth"
         />
         <MetricCard
           label="Активы"
           value={formatMoney(metrics.assets)}
           tone="positive"
+          metricId="assets"
         />
         <MetricCard
           label="Счета скоро"
           value={formatMoneyExact(metrics.billsDueSoon)}
+          metricId="billsDueSoon"
         />
       </section>
     </>

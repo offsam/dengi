@@ -47,6 +47,8 @@ export function computeDashboardMetrics(input: {
   const assets = cashAssets + vehicleAssets;
   const netWorth = assets - totalDebt;
 
+  // Источники доходов (income-sources) намеренно не входят в эти показатели — только личный учёт.
+
   return {
     totalDebt,
     interestThisMonth,

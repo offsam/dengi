@@ -3,8 +3,9 @@
 import { useMemo } from "react";
 import { BubbleCard } from "@/app/components/bubble-card";
 import { UsdAmount } from "@/app/components/usd-amount";
+import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
 import { useAutoVehicleRecords } from "@/app/hooks/use-auto-vehicle-records";
-import { sumRecordsTotal } from "@/lib/auto-vehicles/records/stats";
+import { computeAutoVehicleLifetimeSpendingTotals } from "@/lib/auto-vehicles/records/expense-stats";
 
 function StatBox({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -18,18 +19,21 @@ function StatBox({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export function AutoVehicleArchiveTotals({ vehicleId }: { vehicleId: string }) {
+  const { getVehicle } = useAutoVehicles();
+  const vehicle = getVehicle(vehicleId);
   const { allVehicleRecords } = useAutoVehicleRecords(vehicleId);
 
   const totals = useMemo(() => {
-    const paymentsTotal = sumRecordsTotal(allVehicleRecords, "payment");
-    const expensesTotal = sumRecordsTotal(allVehicleRecords, "expense");
+    if (!vehicle) {
+      return {
+        paymentsTotal: 0,
+        expensesTotal: 0,
+        investedTotal: 0,
+      };
+    }
 
-    return {
-      paymentsTotal,
-      expensesTotal,
-      investedTotal: paymentsTotal + expensesTotal,
-    };
-  }, [allVehicleRecords]);
+    return computeAutoVehicleLifetimeSpendingTotals(vehicle, allVehicleRecords);
+  }, [vehicle, allVehicleRecords]);
 
   return (
     <section className="space-y-2">

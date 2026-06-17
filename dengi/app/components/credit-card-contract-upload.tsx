@@ -25,7 +25,7 @@ function TermsPreview({ terms }: { terms: ContractTerm[] }) {
     return (
       <p className="text-xs text-zinc-500">
         Файл сохранён, но стандартные условия не найдены. Попробуйте текстовый PDF
-        или TXT-экспорт договора.
+        или TXT-экспорт предложения от банка.
       </p>
     );
   }
@@ -33,7 +33,7 @@ function TermsPreview({ terms }: { terms: ContractTerm[] }) {
   return (
     <div className="space-y-2">
       <p className="text-xs font-medium text-emerald-700">
-        Из договора извлечено условий: {terms.length}
+        Из предложения извлечено условий: {terms.length}
       </p>
       <ul className="max-h-48 space-y-1.5 overflow-y-auto">
         {terms.map((term) => (
@@ -56,12 +56,14 @@ export function CreditCardContractUpload({
   cardId,
   card,
   contract,
+  readOnly = false,
   onImport,
   onContractRemove,
 }: {
   cardId: string;
   card: CreditCard;
   contract?: CreditCardContract;
+  readOnly?: boolean;
   onImport: (payload: {
     contract: CreditCardContract;
     cardPatch: Partial<CreditCard>;
@@ -118,7 +120,7 @@ export function CreditCardContractUpload({
     setError(null);
     const blob = await readCreditCardContractBlob(contract.id);
     if (!blob) {
-      setError("Файл договора не найден в локальном хранилище.");
+      setError("Файл предложения не найден в локальном хранилище.");
       return;
     }
 
@@ -148,14 +150,15 @@ export function CreditCardContractUpload({
   }
 
   return (
-    <BubbleCard className="space-y-4 p-4">
-      <div>
-        <h2 className="text-sm font-semibold text-zinc-900">Договор по карте</h2>
-        <p className="mt-1 text-xs text-zinc-500">
-          Загрузите договор с банком. Ставки, комиссии и штрафы появятся на плитке
-          карты.
+    <section className="space-y-2">
+      <h2 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+        Условия карты
+      </h2>
+      <BubbleCard className="space-y-4 p-4">
+        <p className="px-1 text-xs text-zinc-500">
+          Загрузите предложение от банка. Ставки, комиссии и штрафы появятся на
+          плитке карты.
         </p>
-      </div>
 
       {contract ? (
         <div className="space-y-3 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-3">
@@ -180,24 +183,32 @@ export function CreditCardContractUpload({
             >
               Открыть
             </button>
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              disabled={busy}
-              className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-zinc-300 hover:text-zinc-900 disabled:opacity-50"
-            >
-              Заменить
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleRemove()}
-              disabled={busy}
-              className="rounded-full border border-rose-200 bg-white px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:border-rose-300 disabled:opacity-50"
-            >
-              Удалить
-            </button>
+            {!readOnly ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.click()}
+                  disabled={busy}
+                  className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-zinc-300 hover:text-zinc-900 disabled:opacity-50"
+                >
+                  Заменить
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleRemove()}
+                  disabled={busy}
+                  className="rounded-full border border-rose-200 bg-white px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:border-rose-300 disabled:opacity-50"
+                >
+                  Удалить
+                </button>
+              </>
+            ) : null}
           </div>
         </div>
+      ) : readOnly ? (
+        <p className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-6 text-center text-xs text-zinc-500">
+          Предложение не загружено
+        </p>
       ) : (
         <button
           type="button"
@@ -206,7 +217,7 @@ export function CreditCardContractUpload({
           className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-8 text-center transition-colors hover:border-zinc-400 hover:bg-zinc-100/80 disabled:opacity-50"
         >
           <span className="text-sm font-medium text-zinc-800">
-            {busy ? "Читаю договор..." : "Загрузить договор"}
+            {busy ? "Читаю предложение..." : "Загрузить предложение от банка"}
           </span>
           <span className="text-xs text-zinc-500">
             Лучше всего PDF или TXT · до 10 МБ
@@ -227,7 +238,8 @@ export function CreditCardContractUpload({
         }}
       />
 
-      {error ? <p className="text-xs font-medium text-rose-600">{error}</p> : null}
-    </BubbleCard>
+      {error ? <p className="px-1 text-xs font-medium text-rose-600">{error}</p> : null}
+      </BubbleCard>
+    </section>
   );
 }

@@ -16,6 +16,7 @@ type UsdAmountProps = {
   exact?: boolean;
   tone?: UsdAmountTone;
   className?: string;
+  style?: React.CSSProperties;
 };
 
 /** Сумма в USD: $ и цифры — один неразрывный блок */
@@ -24,11 +25,13 @@ export function UsdAmount({
   exact = false,
   tone = "neutral",
   className = "",
+  style,
 }: UsdAmountProps) {
-  const toneClass = className ? "" : toneClassName[tone];
+  const toneClass = className || style ? "" : toneClassName[tone];
 
   return (
     <span
+      style={style}
       className={`inline tabular-nums whitespace-nowrap ${toneClass} ${className}`.trim()}
     >
       {formatUsdAmount(amount, exact)}
@@ -48,6 +51,7 @@ type UsdAmountInputProps = {
   /** Ширина поля цифр (без $) */
   digitsClassName?: string;
   className?: string;
+  disabled?: boolean;
 };
 
 /** Ввод суммы: $ и цифры — одна группа, $ всегда первым */
@@ -59,6 +63,7 @@ function UsdAmountInput({
   parse = toAutoVehicleNumber,
   digitsClassName = "w-[7.5rem]",
   className = "",
+  disabled = false,
 }: UsdAmountInputProps) {
   return (
     <span
@@ -74,6 +79,7 @@ function UsdAmountInput({
         min={min}
         step={step}
         inputMode="decimal"
+        disabled={disabled}
         onChange={(event) => onChange(parse(event.target.value, value))}
       />
     </span>

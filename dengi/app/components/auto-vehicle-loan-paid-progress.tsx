@@ -6,7 +6,7 @@ import { UsdAmount } from "@/app/components/usd-amount";
 import { useAutoVehicleRecords } from "@/app/hooks/use-auto-vehicle-records";
 import { resolveBodyTypeIcon } from "@/lib/car-icons";
 import { computeAutoVehicleLoanStats } from "@/lib/auto-vehicles/records/loan-stats";
-import { AUTO_VEHICLE_STAT_AMOUNT_SM_POSITIVE } from "@/lib/auto-vehicles/detail-theme";
+import { CREDIT_STATS_PROGRESS_CAR_OFFSET_Y_PX } from "@/lib/auto-vehicles/credit-stats-layout";
 import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
 import { FictionalCarSilhouette } from "@/lib/auto-vehicles/fictional-car";
 
@@ -29,7 +29,8 @@ function formatProgressPercent(value: number) {
   return `${Math.round(value)}%`;
 }
 
-const carThumbClassName = "block h-[53px] w-[69px] shrink-0 object-contain object-bottom";
+const carThumbClassName =
+  "relative z-[1] block h-[53px] w-[69px] shrink-0 object-contain object-bottom opacity-100";
 
 /** Дорожка progress bar — стеклянный пузырь, оставшийся путь читается лучше */
 const progressTrackClassName =
@@ -72,6 +73,8 @@ export function AutoVehicleLoanPaidProgress({ vehicle }: { vehicle: AutoVehicle 
   const carThumb = (
     <CarIconImage
       fileName={bodyTypeIcon.fileName}
+      variant="progress"
+      align="bottom"
       className={carThumbClassName}
       fallback={
         <FictionalCarSilhouette
@@ -92,7 +95,7 @@ export function AutoVehicleLoanPaidProgress({ vehicle }: { vehicle: AutoVehicle 
       aria-valuemax={100}
       aria-label="Выплачено по кредиту"
     >
-      <div className="relative h-14 w-full overflow-visible">
+      <div className="relative h-[54px] w-full overflow-visible">
         <div
           className={`absolute inset-x-0 top-[34px] -translate-y-1/2 ${progressTrackClassName}`}
         >
@@ -125,30 +128,33 @@ export function AutoVehicleLoanPaidProgress({ vehicle }: { vehicle: AutoVehicle 
         </div>
 
         <div
-          className="pointer-events-none absolute top-0 z-[1] flex leading-none"
-          style={{
-            left: `${carLeft}%`,
-            transform: "translateX(-38%)",
-          }}
+          className="pointer-events-none absolute top-[34px] z-[2] -translate-x-[38%] -translate-y-1/2"
+          style={{ left: `${carLeft}%` }}
         >
-          <div className="flex flex-col items-center gap-0">
-            <span className="translate-y-[5px] text-[13px] font-semibold tabular-nums leading-none text-[#5DAA8C]">
+          <div className="relative">
+            <span className="absolute bottom-full left-1/2 mb-0.5 -translate-x-1/2 translate-y-[10px] whitespace-nowrap text-[13px] font-semibold tabular-nums leading-none text-[#5DAA8C]">
               {formatProgressPercent(percent)}
             </span>
-            <div className="-translate-y-[3px]">{carThumb}</div>
+            <div style={{ transform: `translateY(${CREDIT_STATS_PROGRESS_CAR_OFFSET_Y_PX}px)` }}>
+              {carThumb}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="-mt-px flex items-baseline justify-between gap-2 text-[11px] leading-tight text-zinc-500">
-        <span>
-          <UsdAmount amount={paidPrincipal} exact className={AUTO_VEHICLE_STAT_AMOUNT_SM_POSITIVE} />{" "}
-          выплачено
-        </span>
-        <span>
-          из{" "}
-          <UsdAmount amount={loanTotal} exact className="text-[11px] font-medium text-zinc-900" />
-        </span>
+        <div className="absolute inset-x-0 top-10 flex items-baseline justify-between gap-2 text-[14px] leading-tight text-zinc-500">
+          <span>
+            <UsdAmount
+              amount={paidPrincipal}
+              exact
+              className="text-[14px] font-semibold leading-none tracking-tight tabular-nums text-[#5DAA8C]"
+            />{" "}
+            погашено
+          </span>
+          <span>
+            из{" "}
+            <UsdAmount amount={loanTotal} exact className="text-[14px] font-medium text-zinc-900" />
+          </span>
+        </div>
       </div>
     </div>
   );

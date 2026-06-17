@@ -1,14 +1,83 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BubbleCard } from "@/app/components/bubble-card";
+import { createPortal } from "react-dom";
 import { CarIconImage } from "@/app/components/car-icon-image";
 import { FormRowEnd } from "@/app/components/usd-amount";
 import {
+  APP_BUBBLE_INSET_SELECTED,
+  APP_MODAL_HEADER,
+  APP_MODAL_PANEL,
+  APP_MODAL_SCRIM,
+} from "@/lib/app-theme";
+import {
+  BODY_TYPE_ICON_COUNT,
   BODY_TYPE_ICONS,
   resolveBodyTypeIcon,
   type BodyTypeIcon,
 } from "@/lib/car-icons";
+
+/** Строка формы — компактная иконка */
+const BODY_TYPE_INLINE_ICON = {
+  wrapper: "relative h-[30px] w-[30px] shrink-0",
+  img: "absolute inset-0 m-auto h-[30px] w-[30px] max-w-none object-contain object-center",
+} as const;
+
+/** Сетка пикера — общая линия снизу для всех силуэтов */
+const BODY_TYPE_PICKER_ICON = {
+  wrapper: "relative mx-auto flex h-[78px] w-full max-w-[78px] items-end justify-center",
+  img: "h-[78px] w-[78px] max-w-none object-contain object-bottom",
+} as const;
+
+/** Мелкий транспорт — меньше, но на той же нижней линии */
+const BODY_TYPE_PICKER_DENSE_IMG: Partial<Record<string, string>> = {
+  mini: "h-[52px] w-[52px] max-w-none object-contain object-bottom",
+  moto: "h-[52px] w-[52px] max-w-none object-contain object-bottom",
+  ebike: "h-[52px] w-[52px] max-w-none object-contain object-bottom",
+};
+
+/** Точечная подгонка смещённых PNG */
+const BODY_TYPE_PICKER_NUDGE: Partial<Record<string, string>> = {
+  Cargo: "-translate-x-[3px]",
+};
+
+function BodyTypeIconSlot({
+  fileName,
+  iconId,
+  variant = "picker",
+}: {
+  fileName: string;
+  iconId: string;
+  variant?: "inline" | "picker";
+}) {
+  const isInline = variant === "inline";
+  const wrapper = isInline ? BODY_TYPE_INLINE_ICON.wrapper : BODY_TYPE_PICKER_ICON.wrapper;
+  const imgClass = isInline
+    ? BODY_TYPE_INLINE_ICON.img
+    : `${BODY_TYPE_PICKER_DENSE_IMG[iconId] ?? BODY_TYPE_PICKER_ICON.img} ${BODY_TYPE_PICKER_NUDGE[iconId] ?? ""}`.trim();
+  const fallbackSize = isInline
+    ? "h-[30px] w-[30px]"
+    : iconId in BODY_TYPE_PICKER_DENSE_IMG
+      ? "h-[52px] w-[52px]"
+      : "h-[78px] w-[78px]";
+
+  return (
+    <div className={wrapper}>
+      <CarIconImage
+        fileName={fileName}
+        align="bottom"
+        className={imgClass}
+        fallback={
+          <span
+            className={`absolute inset-0 m-auto flex ${fallbackSize} items-center justify-center text-[10px] text-zinc-400`}
+          >
+            …
+          </span>
+        }
+      />
+    </div>
+  );
+}
 
 export function BodyTypePickerDialog({
   open,
@@ -41,35 +110,42 @@ export function BodyTypePickerDialog({
     };
   }, [open, onClose]);
 
+  const selected = resolveBodyTypeIcon(value);
+
   if (!open) {
     return null;
   }
 
-  const selected = resolveBodyTypeIcon(value);
-
-  return (
+  const dialog = (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center"
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="body-type-picker-title"
     >
       <button
         type="button"
-        className="absolute inset-0 bg-black/40"
+        className={`absolute inset-0 ${APP_MODAL_SCRIM}`}
         aria-label="Закрыть выбор типа кузова"
         onClick={onClose}
       />
 
-      <BubbleCard className="relative flex max-h-[85dvh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl rounded-b-none">
-        <div className="shrink-0 border-b border-white/40 px-4 py-4">
+      <div
+        className={`relative z-10 flex max-h-[min(85dvh,calc(100dvh-2rem))] w-full max-w-md flex-col overflow-hidden ${APP_MODAL_PANEL}`}
+      >
+        <div className={`shrink-0 ${APP_MODAL_HEADER}`}>
           <div className="flex items-center justify-between gap-3">
-            <h2
-              id="body-type-picker-title"
-              className="text-sm font-semibold tracking-tight text-zinc-900"
-            >
-              Тип кузова
-            </h2>
+            <div>
+              <h2
+                id="body-type-picker-title"
+                className="text-sm font-semibold tracking-tight text-zinc-900"
+              >
+                Тип кузова
+              </h2>
+              <p className="mt-0.5 text-[11px] text-zinc-500">
+                {BODY_TYPE_ICON_COUNT} типов
+              </p>
+            </div>
             <button
               type="button"
               onClick={onClose}
@@ -91,26 +167,22 @@ export function BodyTypePickerDialog({
                   type="button"
                   aria-pressed={isSelected}
                   aria-label={icon.label}
-                  className={`flex flex-col items-center gap-1.5 rounded-xl p-2 transition-colors ${
+                  className={`flex min-h-[7.5rem] flex-col items-center justify-start gap-1.5 rounded-xl px-1 pt-2 pb-2 transition-colors ${
                     isSelected
-                      ? "bg-zinc-900/[0.09] shadow-[inset_0_2px_7px_rgba(55,50,45,0.2),inset_0_-1px_0_rgba(255,255,255,0.7)]"
-                      : "hover:bg-white/25"
+                      ? APP_BUBBLE_INSET_SELECTED
+                      : "hover:bg-zinc-900/[0.04]"
                   }`}
                   onClick={() => {
                     onSelect(icon);
                     onClose();
                   }}
                 >
-                  <CarIconImage
+                  <BodyTypeIconSlot
                     fileName={icon.fileName}
-                    className="h-10 w-full"
-                    fallback={
-                      <span className="flex h-10 w-full items-center justify-center text-[10px] text-zinc-400">
-                        …
-                      </span>
-                    }
+                    iconId={icon.id}
+                    variant="picker"
                   />
-                  <span className="line-clamp-2 text-center text-[10px] font-medium leading-tight text-zinc-700">
+                  <span className="flex min-h-[2.5rem] items-start justify-center line-clamp-2 text-center text-[16px] font-medium leading-tight text-zinc-700">
                     {icon.label}
                   </span>
                 </button>
@@ -118,9 +190,11 @@ export function BodyTypePickerDialog({
             })}
           </div>
         </div>
-      </BubbleCard>
+      </div>
     </div>
   );
+
+  return typeof document === "undefined" ? dialog : createPortal(dialog, document.body);
 }
 
 type BodyTypePickerRowProps = {
@@ -149,11 +223,7 @@ export function BodyTypePickerRow({
           }`}
           onClick={() => setOpen(true)}
         >
-          <CarIconImage
-            fileName={icon.fileName}
-            className="h-7 w-12"
-            fallback={<span className="inline-block h-7 w-12 rounded bg-zinc-200/60" aria-hidden />}
-          />
+          <BodyTypeIconSlot fileName={icon.fileName} iconId={icon.id} variant="inline" />
           <span>{icon.label}</span>
         </button>
       </FormRowEnd>

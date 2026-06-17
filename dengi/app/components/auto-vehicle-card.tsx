@@ -1,8 +1,10 @@
 import { AutoVehicleVisual } from "@/app/components/auto-vehicle-visual";
 import { UsdAmount } from "@/app/components/usd-amount";
 import { formatMileage } from "@/lib/format-money";
-import { buildVehicleDisplayHeading } from "@/lib/auto-vehicles";
+import { buildVehicleCompactLabel, buildVehicleDisplayHeading } from "@/lib/auto-vehicles";
 import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
+
+export type AutoVehicleTileDensity = "full" | "minimal";
 
 function InfoRow({
   label,
@@ -28,11 +30,40 @@ function InfoRow({
   );
 }
 
-export function AutoVehicleCard({ vehicle }: { vehicle: AutoVehicle }) {
+export function AutoVehicleCard({
+  vehicle,
+  density = "full",
+}: {
+  vehicle: AutoVehicle;
+  density?: AutoVehicleTileDensity;
+}) {
+  if (density === "minimal") {
+    const label = buildVehicleCompactLabel(vehicle.catalogId, vehicle.year);
+
+    return (
+      <article className="w-[115px] shrink-0">
+        <AutoVehicleVisual
+          variant="minimal"
+          catalogId={vehicle.catalogId}
+          bodyIconId={vehicle.bodyIconId}
+          year={vehicle.year}
+          bodyColorHex={vehicle.bodyColorHex}
+          wheelColorHex={vehicle.wheelColorHex}
+        />
+        <p
+          className="mt-1 truncate text-center text-[10.5px] font-semibold leading-tight text-zinc-900"
+          title={label}
+        >
+          {label}
+        </p>
+      </article>
+    );
+  }
+
   const heading = buildVehicleDisplayHeading(vehicle.catalogId, vehicle.year);
 
   return (
-    <article className="w-[156px] shrink-0">
+    <article className="w-[156px] shrink-0 overflow-x-clip">
       <div className="relative z-[2] text-right leading-tight">
         <p className="text-[13px] font-semibold text-zinc-900">{heading.primary}</p>
         {heading.secondary ? (
@@ -40,30 +71,32 @@ export function AutoVehicleCard({ vehicle }: { vehicle: AutoVehicle }) {
         ) : null}
       </div>
 
-      <AutoVehicleVisual
-        variant="shelf"
-        catalogId={vehicle.catalogId}
-        bodyIconId={vehicle.bodyIconId}
-        year={vehicle.year}
-        bodyColorHex={vehicle.bodyColorHex}
-        wheelColorHex={vehicle.wheelColorHex}
-      />
-
-      <p className="-mt-0.5 text-center text-[11px] tabular-nums text-zinc-600">
-        {formatMileage(vehicle.mileage)}
-      </p>
-
-      <div className="mt-2 space-y-1">
-        <InfoRow label="Остаток" value={<UsdAmount amount={vehicle.remaining} exact />} />
-        <InfoRow
-          label="Платёж по кредиту"
-          value={<UsdAmount amount={vehicle.loanPayment} exact />}
+      <div className="mt-[45px]">
+        <AutoVehicleVisual
+          variant="shelf"
+          catalogId={vehicle.catalogId}
+          bodyIconId={vehicle.bodyIconId}
+          year={vehicle.year}
+          bodyColorHex={vehicle.bodyColorHex}
+          wheelColorHex={vehicle.wheelColorHex}
         />
-        <InfoRow
-          label="Проценты по кредиту"
-          value={<UsdAmount amount={vehicle.loanInterest} exact tone="danger" />}
-          tone="danger"
-        />
+
+        <p className="-mt-1 text-center text-[11px] tabular-nums text-zinc-600">
+          {formatMileage(vehicle.mileage)}
+        </p>
+
+        <div className="mt-1 space-y-1">
+          <InfoRow label="Остаток" value={<UsdAmount amount={vehicle.remaining} exact />} />
+          <InfoRow
+            label="Платёж по кредиту"
+            value={<UsdAmount amount={vehicle.loanPayment} exact />}
+          />
+          <InfoRow
+            label="Проценты по кредиту"
+            value={<UsdAmount amount={vehicle.loanInterest} exact tone="danger" />}
+            tone="danger"
+          />
+        </div>
       </div>
     </article>
   );

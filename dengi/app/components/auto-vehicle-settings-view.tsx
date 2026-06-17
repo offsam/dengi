@@ -18,6 +18,11 @@ import { AutoVehicleSettingsPanel } from "@/app/components/auto-vehicle-settings
 import { AutoVehicleStatsPanel } from "@/app/components/auto-vehicle-stats-panel";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
 import { buildVehicleDisplayHeading } from "@/lib/auto-vehicles";
+import {
+  CREDIT_STATS_CONTENT_OFFSET_TOP_PX,
+  resolvePaymentsContentOffsetTop,
+  shouldShowCreditVehicleStats,
+} from "@/lib/auto-vehicles/credit-stats-layout";
 import { APP_BUBBLE_SHELL, APP_PAGE_CLASS } from "@/lib/app-theme";
 import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
 
@@ -26,8 +31,17 @@ function AutoVehicleDetailContent({ vehicle }: { vehicle: AutoVehicle }) {
   const { updateVehicle, disposeVehicle } = useAutoVehicles();
   const [tab, setTab] = useState<AutoVehicleDetailTab>("stats");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [paymentsHeroCompress, setPaymentsHeroCompress] = useState(0);
 
   const heading = buildVehicleDisplayHeading(vehicle.catalogId, vehicle.year);
+  const creditStatsLayout = shouldShowCreditVehicleStats(vehicle);
+
+  function handleTabChange(next: AutoVehicleDetailTab) {
+    if (next !== "payments") {
+      setPaymentsHeroCompress(0);
+    }
+    setTab(next);
+  }
 
   return (
     <div className={APP_PAGE_CLASS}>
@@ -36,14 +50,14 @@ function AutoVehicleDetailContent({ vehicle }: { vehicle: AutoVehicle }) {
           tab === "payments" ? "h-dvh min-h-0 gap-3 overflow-hidden" : "gap-5"
         }`}
       >
-        <header className="flex shrink-0 items-center justify-between gap-3">
+        <header className="flex shrink-0 items-start justify-between gap-3">
           <Link
             href="/"
-            className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
+            className="shrink-0 text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
           >
             Назад
           </Link>
-          <div className="min-w-0 translate-x-[40px] translate-y-0 text-center">
+          <div className="min-w-0 max-w-[70%] text-right">
             <p className="truncate text-sm font-semibold tracking-tight text-zinc-900">
               {heading.primary}
             </p>
@@ -51,25 +65,47 @@ function AutoVehicleDetailContent({ vehicle }: { vehicle: AutoVehicle }) {
               <p className="truncate text-xs text-zinc-500">{heading.secondary}</p>
             ) : null}
           </div>
-          <span className="w-[42px]" aria-hidden />
         </header>
 
         <div
           className={`relative ${tab === "payments" ? "flex min-h-0 flex-1 flex-col" : ""}`}
         >
-          <AutoVehicleDetailHero vehicle={vehicle} large statsLayout />
+          <AutoVehicleDetailHero
+            vehicle={vehicle}
+            large
+            statsLayout={creditStatsLayout}
+            heroCompress={
+              tab === "payments" && creditStatsLayout ? paymentsHeroCompress : 0
+            }
+          />
 
           <div
-            className={`relative z-[2] -mt-[97px] flex flex-col gap-5 ${
+            className={`relative z-[2] flex flex-col gap-5 ${
               tab === "payments" ? "min-h-0 flex-1" : ""
             }`}
+            style={
+              creditStatsLayout
+                ? {
+                    marginTop:
+                      tab === "payments"
+                        ? resolvePaymentsContentOffsetTop(paymentsHeroCompress)
+                        : CREDIT_STATS_CONTENT_OFFSET_TOP_PX,
+                  }
+                : undefined
+            }
           >
-            <AutoVehicleDetailTabs active={tab} onChange={setTab} />
+            <AutoVehicleDetailTabs active={tab} onChange={handleTabChange} />
 
             {tab === "stats" ? <AutoVehicleStatsPanel vehicle={vehicle} /> : null}
 
             {tab === "payments" ? (
-              <AutoVehiclePaymentsPanel vehicleId={vehicle.id} expanded />
+              <AutoVehiclePaymentsPanel
+                vehicleId={vehicle.id}
+                expanded
+                onHeroCompress={
+                  creditStatsLayout ? setPaymentsHeroCompress : undefined
+                }
+              />
             ) : null}
 
             {tab === "expenses" ? (

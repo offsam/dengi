@@ -7,20 +7,29 @@ import { AutoVehicleAddDialog } from "@/app/components/auto-vehicle-add-dialog";
 import { AutoVehicleAddedDialog } from "@/app/components/auto-vehicle-added-dialog";
 import { BubbleAddButton } from "@/app/components/bubble-add-button";
 import { AutoVehiclesCarousel } from "@/app/components/auto-vehicles-carousel";
+import { ShelfViewToggle } from "@/app/components/shelf-view-toggle";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
+import { useHomeItemOrder } from "@/app/hooks/use-home-item-order";
+import { useHomeShelfView } from "@/app/hooks/use-home-shelf-view";
+import { useShelfViewFade } from "@/app/hooks/use-shelf-view-fade";
 import type { AutoVehicle, AutoVehicleDraft } from "@/lib/auto-vehicles/vehicle";
+import type { HomeShelfView } from "@/lib/home/shelf-view";
 
 function Shelf({
   title,
   onAddLabel,
   onAdd,
+  editOrder,
   headerAction,
+  headerTrailing,
   children,
 }: {
   title: string;
   onAddLabel: string;
   onAdd: () => void;
+  editOrder: boolean;
   headerAction?: React.ReactNode;
+  headerTrailing?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -28,21 +37,36 @@ function Shelf({
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <h2 className="text-sm font-semibold tracking-tight text-zinc-900">{title}</h2>
-          {headerAction}
+          {!editOrder ? headerAction : null}
         </div>
-        <BubbleAddButton ariaLabel={onAddLabel} onClick={onAdd} />
+        {!editOrder ? (
+          <div className="flex shrink-0 items-center gap-2">
+            {headerTrailing}
+            <BubbleAddButton ariaLabel={onAddLabel} onClick={onAdd} />
+          </div>
+        ) : null}
       </div>
       {children}
     </section>
   );
 }
 
-export function AutoVehiclesShelf() {
+export function AutoVehiclesShelf({ editOrder = false }: { editOrder?: boolean }) {
   const router = useRouter();
   const { activeVehicles, addVehicle } = useAutoVehicles();
+  const { orderedItems, moveItem } = useHomeItemOrder("autoVehicles", activeVehicles);
+  const { view, setView } = useHomeShelfView("autoVehicles");
+  const { displayView, visible, switchView } = useShelfViewFade(view);
   const [addOpen, setAddOpen] = useState(false);
   const [addSession, setAddSession] = useState(0);
   const [addedVehicle, setAddedVehicle] = useState<AutoVehicle | null>(null);
+
+  const handleViewChange = useCallback(
+    (next: HomeShelfView) => {
+      switchView(next, setView);
+    },
+    [setView, switchView]
+  );
 
   const handleContinueToVehicle = useCallback(() => {
     setAddedVehicle((current) => {
@@ -70,6 +94,7 @@ export function AutoVehiclesShelf() {
       <Shelf
         title="Авто"
         onAddLabel="Добавить авто"
+        editOrder={editOrder}
         onAdd={() => {
           setAddSession((current) => current + 1);
           setAddOpen(true);
@@ -82,8 +107,22 @@ export function AutoVehiclesShelf() {
             Архив
           </Link>
         }
+        headerTrailing={
+          !editOrder ? <ShelfViewToggle view={view} onChange={handleViewChange} /> : null
+        }
       >
-        <AutoVehiclesCarousel vehicles={activeVehicles} />
+        <div
+          className={`transition-opacity duration-150 ease-out ${
+            visible ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+        >
+          <AutoVehiclesCarousel
+            vehicles={orderedItems}
+            density={displayView === "minimal" ? "minimal" : "full"}
+            editOrder={editOrder}
+            onMoveItem={moveItem}
+          />
+        </div>
       </Shelf>
 
       <AutoVehicleAddDialog

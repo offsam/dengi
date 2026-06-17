@@ -3,6 +3,7 @@
 import { BodyTypePickerRow } from "@/app/components/body-type-picker-dialog";
 import { BubbleCard } from "@/app/components/bubble-card";
 import { BubbleSegmentedControl } from "@/app/components/bubble-segmented-control";
+import { SegmentedControl } from "@/app/components/segmented-control";
 import { ReadonlyFormValue } from "@/app/components/editable-form-value";
 import { APP_BUBBLE_INSET_CONTROL } from "@/lib/app-theme";
 import {
@@ -20,18 +21,25 @@ import {
   getVehicleCatalogEntry,
   getVehicleModelsForMake,
   normalizeCashFunding,
+  resolveBodyIconIdFromCatalog,
   resolveLoanAprPercent,
   resolveLoanPaymentDay,
   syncFinancingFromLoanInputs,
   toLoanAprInput,
   toLoanTermMonthsInput,
   VEHICLE_CATALOG_MAKES,
+  INSURANCE_BILLING_OPTIONS,
+  convertInsurancePaymentAmountForBillingPeriod,
+  resolveInsuranceBillingPeriod,
+  resolveInsuranceMonthlyPayment,
+  resolveInsuranceAnnualPayment,
 } from "@/lib/auto-vehicles";
 import { toAutoVehicleNumber } from "@/lib/auto-vehicles/form-utils";
 import { resolveBodyTypeIcon } from "@/lib/car-icons";
 import { CarIconImage } from "@/app/components/car-icon-image";
 import { formatAppDateNumeric } from "@/lib/i18n/locale";
 import type { AutoVehicle, AutoVehicleFinancingType } from "@/lib/auto-vehicles/vehicle";
+import type { AutoVehicleInsuranceBillingPeriod } from "@/lib/auto-vehicles/insurance";
 
 const FINANCING_OPTIONS: { id: AutoVehicleFinancingType; label: string }[] = [
   { id: "credit", label: "Кредит" },
@@ -93,6 +101,100 @@ function InfoValue({ children }: { children: React.ReactNode }) {
     <ReadonlyFormValue>
       <span className="text-[15px] leading-none text-zinc-700">{children}</span>
     </ReadonlyFormValue>
+  );
+}
+
+function InsuranceBillingPeriodToggle({
+  value,
+  onChange,
+}: {
+  value: AutoVehicleInsuranceBillingPeriod;
+  onChange: (next: AutoVehicleInsuranceBillingPeriod) => void;
+}) {
+  return (
+    <div className="max-w-[7rem] shrink-0 rounded-xl border border-white/70 bg-white/22 p-0.5">
+      <SegmentedControl
+        options={INSURANCE_BILLING_OPTIONS}
+        value={value}
+        onChange={onChange}
+        ariaLabel="Период оплаты страховки"
+        variant="bubble"
+      />
+    </div>
+  );
+}
+
+const insurancePaymentInputDigitsClassName = "w-[5.5rem]";
+
+function InsurancePaymentRow({
+  billingPeriod,
+  monthlyPayment,
+  annualPayment,
+  paymentAmount,
+  readOnly,
+  editable,
+  activeControlClassName,
+  onBillingPeriodChange,
+  onPaymentAmountChange,
+}: {
+  billingPeriod: AutoVehicleInsuranceBillingPeriod;
+  monthlyPayment: number;
+  annualPayment: number;
+  paymentAmount: number;
+  readOnly: boolean;
+  editable: boolean;
+  activeControlClassName: string;
+  onBillingPeriodChange: (next: AutoVehicleInsuranceBillingPeriod) => void;
+  onPaymentAmountChange: (amount: number) => void;
+}) {
+  return (
+    <div className="flex min-h-[48px] items-center gap-2 border-b border-white/35 px-4 py-2.5 last:border-b-0">
+      <div className="flex min-w-0 items-center gap-1.5">
+        <span className="shrink-0 text-[15px] leading-tight text-zinc-900">Платёж в</span>
+
+        {readOnly ? (
+          <span className="shrink-0 text-[15px] leading-tight text-zinc-700">
+            {billingPeriod === "annual" ? "год" : "месяц"}
+          </span>
+        ) : (
+          <InsuranceBillingPeriodToggle
+            value={billingPeriod}
+            onChange={onBillingPeriodChange}
+          />
+        )}
+      </div>
+
+      <div className="ml-auto flex min-w-0 shrink-0 items-center justify-end">
+        {readOnly ? (
+          billingPeriod === "annual" ? (
+            <ReadonlyFormValue>
+              <span className="inline-flex flex-wrap items-baseline justify-end gap-x-1 text-right">
+                <UsdAmount amount={annualPayment} exact />
+                {monthlyPayment > 0 ? (
+                  <span className="text-xs text-zinc-500">
+                    (<UsdAmount amount={monthlyPayment} exact />/мес)
+                  </span>
+                ) : null}
+              </span>
+            </ReadonlyFormValue>
+          ) : (
+            <ReadonlyFormValue>
+              <UsdAmount amount={monthlyPayment} exact />
+            </ReadonlyFormValue>
+          )
+        ) : (
+          <FormRowEnd>
+            <span className={editable ? activeControlClassName : ""}>
+              <UsdAmountInput
+                value={paymentAmount}
+                digitsClassName={insurancePaymentInputDigitsClassName}
+                onChange={onPaymentAmountChange}
+              />
+            </span>
+          </FormRowEnd>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -168,6 +270,13 @@ export function AutoVehicleFormFields({
       : catalogEntry.model
     : "—";
   const bodyTypeIcon = resolveBodyTypeIcon(draft.bodyIconId);
+  const insuranceBillingPeriod = resolveInsuranceBillingPeriod(draft);
+  const insuranceMonthlyPayment = resolveInsuranceMonthlyPayment(draft);
+  const insuranceAnnualPayment = resolveInsuranceAnnualPayment(draft);
+
+  function patchInsurance(patch: Partial<AutoVehicle>) {
+    onPatch({ ...draft, ...patch });
+  }
 
   function patchWithFinancing(patch: Partial<AutoVehicle>) {
     const next = { ...draft, ...patch };
@@ -180,6 +289,22 @@ export function AutoVehicleFormFields({
     onPatch({
       ...patch,
       ...syncFinancingFromLoanInputs(next),
+    });
+  }
+
+  function handleInsuranceBillingPeriodChange(nextPeriod: AutoVehicleInsuranceBillingPeriod) {
+    const amount = draft.insurancePaymentAmount ?? 0;
+
+    patchInsurance({
+      insuranceBillingPeriod: nextPeriod,
+      insurancePaymentAmount:
+        amount > 0
+          ? convertInsurancePaymentAmountForBillingPeriod(
+              amount,
+              insuranceBillingPeriod,
+              nextPeriod
+            )
+          : undefined,
     });
   }
 
@@ -205,8 +330,12 @@ export function AutoVehicleFormFields({
                   const nextMake = event.target.value;
                   const nextModels = getVehicleModelsForMake(nextMake);
                   const nextCatalogId = nextModels[0]?.id ?? draft.catalogId;
+                  const nextBodyIconId = resolveBodyIconIdFromCatalog(nextCatalogId);
 
-                  onPatch({ catalogId: nextCatalogId });
+                  onPatch({
+                    catalogId: nextCatalogId,
+                    ...(nextBodyIconId ? { bodyIconId: nextBodyIconId } : {}),
+                  });
                 }}
               >
                 {VEHICLE_CATALOG_MAKES.map((item) => (
@@ -227,7 +356,15 @@ export function AutoVehicleFormFields({
               <select
                 className={activeSelectClassName}
                 value={catalogId}
-                onChange={(event) => onPatch({ catalogId: event.target.value })}
+                onChange={(event) => {
+                  const nextCatalogId = event.target.value;
+                  const nextBodyIconId = resolveBodyIconIdFromCatalog(nextCatalogId);
+
+                  onPatch({
+                    catalogId: nextCatalogId,
+                    ...(nextBodyIconId ? { bodyIconId: nextBodyIconId } : {}),
+                  });
+                }}
               >
                 {models.map((item) => (
                   <option key={item.id} value={item.id}>
@@ -439,6 +576,45 @@ export function AutoVehicleFormFields({
           ) : null}
         </BubbleCard>
       </section>
+
+      <FormSection title="Страховка">
+        <EditRow label="Страховая компания">
+          {readOnly ? (
+            <InfoValue>{draft.insuranceProviderName?.trim() || "—"}</InfoValue>
+          ) : (
+            <FormRowEnd>
+              <input
+                type="text"
+                className={`${fieldClassName} max-w-full truncate text-right ${
+                  editable ? activeControlClassName : ""
+                }`}
+                value={draft.insuranceProviderName ?? ""}
+                placeholder="Geico"
+                onChange={(event) =>
+                  patchInsurance({ insuranceProviderName: event.target.value })
+                }
+              />
+            </FormRowEnd>
+          )}
+        </EditRow>
+
+        <InsurancePaymentRow
+          billingPeriod={insuranceBillingPeriod}
+          monthlyPayment={insuranceMonthlyPayment}
+          annualPayment={insuranceAnnualPayment}
+          paymentAmount={draft.insurancePaymentAmount ?? 0}
+          readOnly={readOnly}
+          editable={editable}
+          activeControlClassName={activeControlClassName}
+          onBillingPeriodChange={handleInsuranceBillingPeriodChange}
+          onPaymentAmountChange={(insurancePaymentAmount) =>
+            patchInsurance({
+              insurancePaymentAmount:
+                insurancePaymentAmount > 0 ? insurancePaymentAmount : undefined,
+            })
+          }
+        />
+      </FormSection>
     </div>
   );
 }

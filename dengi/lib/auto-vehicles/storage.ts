@@ -1,4 +1,5 @@
 import { resolveBodyTypeIcon } from "@/lib/car-icons";
+import { normalizeInsuranceSettings } from "./insurance";
 import { prepareAutoVehicleDraft, toAutoVehicleDraft } from "./defaults";
 import { SEED_AUTO_VEHICLES } from "./seed";
 import { normalizeCashFunding } from "./cash-funding";
@@ -53,22 +54,22 @@ function normalizeAutoVehicle(raw: AutoVehicle): AutoVehicle {
   };
 
   if (financingType === "cash") {
-    return {
+    return normalizeInsuranceSettings({
       ...base,
       remaining: 0,
       loanPayment: 0,
       loanTermMonths: 0,
       loanAprPercent: 0,
       loanInterest: 0,
-    };
+    });
   }
 
   const synced = syncFinancingFromLoanInputs(base);
 
-  return {
+  return normalizeInsuranceSettings({
     ...base,
     ...synced,
-  };
+  });
 }
 
 function normalizeStoredVehicles(vehicles: AutoVehicle[]): AutoVehicle[] {

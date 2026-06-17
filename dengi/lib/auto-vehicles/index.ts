@@ -9,7 +9,36 @@ export {
   VEHICLE_CATALOG_MAKES,
 } from "./catalog";
 export { createEmptyAutoVehicleDraft, prepareAutoVehicleDraft, toAutoVehicleDraft } from "./defaults";
+export {
+  CREDIT_STATS_CONTENT_OFFSET_TOP_PX,
+  CREDIT_STATS_GENERAL_GRID_CLASS_NAME,
+  CREDIT_STATS_GENERAL_AMOUNT_NEUTRAL,
+  CREDIT_STATS_GENERAL_LABEL_CLASS_NAME,
+  CREDIT_STATS_GENERAL_META_CLASS_NAME,
+  CREDIT_STATS_HERO_SCALE,
+  CREDIT_STATS_HERO_SLOT_HEIGHT_PX,
+  CREDIT_STATS_LOAN_PLAQUE_GAP_PX,
+  CREDIT_STATS_NOW_SECTION_OFFSET_PX,
+  CREDIT_STATS_PROGRESS_CAR_OFFSET_Y_PX,
+  PAYMENTS_CONTENT_OFFSET_MIN_PX,
+  PAYMENTS_HERO_COMPRESS_MAX_PX,
+  PAYMENTS_HERO_COMPRESS_MIN_RATIO,
+  clampPaymentsHeroCompress,
+  resolvePaymentsContentOffsetTop,
+  resolvePaymentsHeroScale,
+  shouldShowCreditVehicleStats,
+} from "./credit-stats-layout";
+export { resolveBodyIconIdFromCatalog } from "./body-icon-from-catalog";
 export { normalizeCashFunding, createDefaultCashFunding } from "./cash-funding";
+export {
+  convertInsurancePaymentAmountForBillingPeriod,
+  INSURANCE_BILLING_OPTIONS,
+  normalizeInsuranceSettings,
+  resolveInsuranceAnnualPayment,
+  resolveInsuranceBillingPeriod,
+  resolveInsuranceMonthlyPayment,
+} from "./insurance";
+export type { AutoVehicleInsuranceBillingPeriod } from "./insurance";
 export {
   addMonthsToIsoDate,
   computeLoanMonthlyPayment,
@@ -34,6 +63,10 @@ export { VehicleSilhouette } from "./silhouettes";
 
 export { carImagesApiEnabled, getLocalVehicleImagePath } from "./image-source";
 export { FictionalCarSilhouette } from "./fictional-car";
+export {
+  buildVehicleCompactLabel,
+  formatCompactVehicleMake,
+} from "./compact-display";
 
 export function resolveVehicleSilhouetteId(catalogId: string) {
   const entry = getVehicleCatalogEntry(catalogId);

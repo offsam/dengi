@@ -42,3 +42,15 @@ export function addCreditCardTransaction(
   writeCreditCardTransactions([next, ...transactions]);
   return next;
 }
+
+export function updateCreditCardTransaction(
+  id: string,
+  patch: Partial<Omit<CreditCardTransaction, "id" | "cardId">>
+) {
+  const transactions = readCreditCardTransactions();
+  const next = transactions.map((transaction) =>
+    transaction.id === id ? { ...transaction, ...patch, id: transaction.id } : transaction
+  );
+  writeCreditCardTransactions(next);
+  return next.find((transaction) => transaction.id === id) ?? null;
+}

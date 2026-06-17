@@ -1,196 +1,399 @@
+"use client";
+
 import { BubbleCard } from "@/app/components/bubble-card";
-import { UsdAmountInput } from "@/app/components/usd-amount";
-import { APP_BUBBLE_INPUT } from "@/lib/app-theme";
+import { ReadonlyFormValue } from "@/app/components/editable-form-value";
+import {
+  FormRowEnd,
+  PercentAmountInput,
+  UsdAmount,
+  UsdAmountInput,
+} from "@/app/components/usd-amount";
+import { APP_BUBBLE_INPUT, APP_BUBBLE_INSET_CONTROL } from "@/lib/app-theme";
 import { BANKS, isOtherBank, POPULAR_BANK_IDS, type BankId } from "@/lib/bank-logos";
 import type { CreditCard } from "@/lib/credit-cards/types";
+import { calculateMinimumPayment } from "@/lib/credit-cards/min-payment";
+import {
+  formatPaymentDueDayDisplay,
+  patchPaymentDueDay,
+  resolvePaymentDueDay,
+} from "@/lib/credit-cards/payment-due-date";
 
-type FieldProps = {
+const fieldClassName =
+  "w-full min-w-0 border-0 bg-transparent py-0 text-right text-[15px] leading-none text-zinc-900 outline-none ring-0 placeholder:text-zinc-300 focus:ring-0";
+
+const textInputClassName = `${fieldClassName} max-w-full`;
+
+const numberInputClassName = `${fieldClassName} tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`;
+
+function FormSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-2">
+      <h2 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+        {title}
+      </h2>
+      <BubbleCard>{children}</BubbleCard>
+    </section>
+  );
+}
+
+function EditRow({
+  label,
+  children,
+  hint,
+}: {
   label: string;
   children: React.ReactNode;
   hint?: string;
-};
-
-export function CreditCardField({ label, children, hint }: FieldProps) {
+}) {
   return (
-    <label className="block space-y-1.5">
-      <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-        {label}
+    <div className="flex min-h-[48px] items-center gap-3 border-b border-white/35 px-4 py-2.5 transition-colors duration-200 last:border-b-0">
+      <span className="w-[42%] shrink-0 text-[15px] leading-tight text-zinc-900">{label}</span>
+      <div className="flex min-w-0 flex-1 items-center justify-end">{children}</div>
+      {hint ? <span className="sr-only">{hint}</span> : null}
+    </div>
+  );
+}
+
+function InfoValue({ children }: { children: React.ReactNode }) {
+  return (
+    <ReadonlyFormValue>
+      <span className="text-[15px] leading-none text-zinc-700">{children}</span>
+    </ReadonlyFormValue>
+  );
+}
+
+function DirectNumberInput({
+  value,
+  onChange,
+  min,
+  max,
+  suffix,
+  widthClassName = "w-[5.5rem]",
+  highlighted = false,
+  highlightClassName = APP_BUBBLE_INSET_CONTROL,
+}: {
+  value: number;
+  onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+  suffix?: string;
+  widthClassName?: string;
+  highlighted?: boolean;
+  highlightClassName?: string;
+}) {
+  return (
+    <FormRowEnd>
+      <span
+        className={`inline-flex items-center whitespace-nowrap text-[15px] leading-none text-zinc-900 tabular-nums ${
+          highlighted ? highlightClassName : ""
+        }`}
+      >
+        <input
+          type="number"
+          className={`${numberInputClassName} ${widthClassName}`}
+          value={value || ""}
+          min={min}
+          max={max}
+          onChange={(event) => onChange(toCreditCardNumber(event.target.value, value))}
+        />
+        {suffix ? (
+          <span className="ml-0.5 shrink-0 text-zinc-400" aria-hidden>
+            {suffix}
+          </span>
+        ) : null}
       </span>
-      {children}
-      {hint ? <span className="block text-xs text-zinc-400">{hint}</span> : null}
-    </label>
+    </FormRowEnd>
+  );
+}
+
+function DirectTextInput({
+  value,
+  onChange,
+  placeholder,
+  widthClassName = "w-[8rem]",
+  highlighted = false,
+  highlightClassName = APP_BUBBLE_INSET_CONTROL,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  widthClassName?: string;
+  highlighted?: boolean;
+  highlightClassName?: string;
+}) {
+  return (
+    <FormRowEnd>
+      <span
+        className={`inline-flex max-w-full items-center text-[15px] leading-none text-zinc-900 ${
+          highlighted ? highlightClassName : ""
+        }`}
+      >
+        <input
+          type="text"
+          className={`${textInputClassName} ${widthClassName}`}
+          value={value}
+          placeholder={placeholder}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </span>
+    </FormRowEnd>
+  );
+}
+
+function EditableUsdRow({
+  value,
+  onChange,
+  readOnly,
+  editable,
+  activeControlClassName,
+}: {
+  value: number;
+  onChange: (value: number) => void;
+  readOnly: boolean;
+  editable: boolean;
+  activeControlClassName: string;
+}) {
+  if (readOnly) {
+    return (
+      <ReadonlyFormValue>
+        <UsdAmount amount={value} exact />
+      </ReadonlyFormValue>
+    );
+  }
+
+  return (
+    <FormRowEnd>
+      <span className={editable ? activeControlClassName : ""}>
+        <UsdAmountInput
+          value={value}
+          onChange={onChange}
+          parse={toCreditCardNumber}
+          digitsClassName="w-[5.5rem]"
+        />
+      </span>
+    </FormRowEnd>
   );
 }
 
 export const creditCardInputClassName = APP_BUBBLE_INPUT;
-
-function CreditCardUsdInput({
-  value,
-  onChange,
-}: {
-  value: number;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <div className={`${creditCardInputClassName} flex items-center justify-start py-0 pl-3 pr-3`}>
-      <UsdAmountInput
-        value={value}
-        onChange={onChange}
-        parse={toCreditCardNumber}
-        digitsClassName="w-full min-w-0 flex-1"
-        className="w-full text-sm"
-      />
-    </div>
-  );
-}
 
 export function toCreditCardNumber(value: string, fallback = 0) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function resolveBankLabel(draft: CreditCard) {
+  if (isOtherBank(draft.bankId)) {
+    return draft.customBankName?.trim() || BANKS.other.name;
+  }
+
+  return BANKS[draft.bankId]?.name ?? draft.bankId;
+}
+
+function formatAprInput(value: number) {
+  if (!Number.isFinite(value)) {
+    return "0";
+  }
+
+  return Number.isInteger(value) ? String(value) : value.toFixed(2);
+}
+
 export function CreditCardFormFields({
   draft,
   onPatch,
+  addFlow = false,
+  readOnly = false,
 }: {
   draft: CreditCard;
   onPatch: (patch: Partial<CreditCard>) => void;
+  /** Форма добавления: сначала банк, потом остальные поля */
+  addFlow?: boolean;
+  readOnly?: boolean;
 }) {
   const showCustomBankName = isOtherBank(draft.bankId);
+  const bankReady = addFlow
+    ? Boolean(draft.bankId) && (!showCustomBankName || Boolean(draft.customBankName?.trim()))
+    : true;
+  const editable = addFlow ? true : !readOnly;
+  const activeControlClassName = editable ? APP_BUBBLE_INSET_CONTROL : "";
+  const activeSelectClassName = `${fieldClassName} max-w-full truncate ${
+    editable ? activeControlClassName : ""
+  }`;
+  const computedMinPayment = calculateMinimumPayment({
+    balance: draft.balance,
+    apr: draft.apr,
+    contract: draft.contract,
+  });
 
   return (
-    <>
-      <BubbleCard className="space-y-4 p-4">
-        <h2 className="text-sm font-semibold text-zinc-900">Основное</h2>
-
-        <CreditCardField label="Название карты">
-          <input
-            className={creditCardInputClassName}
-            value={draft.name}
-            onChange={(event) => onPatch({ name: event.target.value })}
-            placeholder="Sapphire Preferred"
-            required
-          />
-        </CreditCardField>
-
-        <CreditCardField label="Банк">
-          <select
-            className={creditCardInputClassName}
-            value={draft.bankId}
-            onChange={(event) => {
-              const bankId = event.target.value as BankId;
-              onPatch({
-                bankId,
-                customBankName: isOtherBank(bankId)
-                  ? draft.customBankName ?? ""
-                  : undefined,
-              });
-            }}
-          >
-            {POPULAR_BANK_IDS.map((bankId) => (
-              <option key={bankId} value={bankId}>
-                {BANKS[bankId].name}
-              </option>
-            ))}
-            <option value="other">{BANKS.other.name}</option>
-          </select>
-        </CreditCardField>
+    <div className="space-y-5">
+      <FormSection title="Основное">
+        <EditRow label="Банк">
+          {readOnly && !addFlow ? (
+            <InfoValue>{resolveBankLabel(draft)}</InfoValue>
+          ) : (
+            <FormRowEnd>
+              <select
+                className={activeSelectClassName}
+                value={draft.bankId || ""}
+                onChange={(event) => {
+                  const bankId = event.target.value as BankId;
+                  onPatch({
+                    bankId,
+                    customBankName: isOtherBank(bankId)
+                      ? draft.customBankName ?? ""
+                      : undefined,
+                    name: addFlow ? "" : draft.name,
+                  });
+                }}
+                required
+              >
+                {addFlow ? (
+                  <option value="" disabled>
+                    Выберите банк
+                  </option>
+                ) : null}
+                {POPULAR_BANK_IDS.map((bankId) => (
+                  <option key={bankId} value={bankId}>
+                    {BANKS[bankId].name}
+                  </option>
+                ))}
+                <option value="other">{BANKS.other.name}</option>
+              </select>
+            </FormRowEnd>
+          )}
+        </EditRow>
 
         {showCustomBankName ? (
-          <CreditCardField label="Название банка">
-            <input
-              className={creditCardInputClassName}
-              value={draft.customBankName ?? ""}
-              onChange={(event) => onPatch({ customBankName: event.target.value })}
-              placeholder="Например, Capital One"
-              required
-            />
-          </CreditCardField>
+          <EditRow label="Название банка">
+            {readOnly && !addFlow ? (
+              <InfoValue>{draft.customBankName?.trim() || "—"}</InfoValue>
+            ) : (
+              <DirectTextInput
+                value={draft.customBankName ?? ""}
+                placeholder="Capital One"
+                highlighted={editable}
+                highlightClassName={activeControlClassName}
+                onChange={(customBankName) => onPatch({ customBankName })}
+              />
+            )}
+          </EditRow>
         ) : null}
-      </BubbleCard>
 
-      <BubbleCard className="space-y-4 p-4">
-        <h2 className="text-sm font-semibold text-zinc-900">Балансы</h2>
+        {bankReady ? (
+          <>
+            <EditRow label="Название карты">
+              {readOnly && !addFlow ? (
+                <InfoValue>{draft.name || "—"}</InfoValue>
+              ) : (
+                <DirectTextInput
+                  value={draft.name}
+                  placeholder="Sapphire Preferred"
+                  widthClassName="w-[9rem]"
+                  highlighted={editable}
+                  highlightClassName={activeControlClassName}
+                  onChange={(name) => onPatch({ name })}
+                />
+              )}
+            </EditRow>
 
-        <div className="grid grid-cols-2 gap-3">
-          <CreditCardField label="Текущий баланс">
-            <CreditCardUsdInput
-              value={draft.balance}
-              onChange={(balance) => onPatch({ balance })}
-            />
-          </CreditCardField>
+            <EditRow label="Кредитный лимит">
+              <EditableUsdRow
+                value={draft.limit}
+                onChange={(limit) => onPatch({ limit })}
+                readOnly={readOnly && !addFlow}
+                editable={editable}
+                activeControlClassName={activeControlClassName}
+              />
+            </EditRow>
 
-          <CreditCardField label="Предыдущий баланс">
-            <CreditCardUsdInput
-              value={draft.previousBalance}
-              onChange={(previousBalance) => onPatch({ previousBalance })}
-            />
-          </CreditCardField>
+            <EditRow label="Процентная ставка">
+              {readOnly && !addFlow ? (
+                <InfoValue>{formatAprInput(draft.apr)}%</InfoValue>
+              ) : (
+                <FormRowEnd>
+                  <span className={editable ? activeControlClassName : ""}>
+                    <PercentAmountInput
+                      value={formatAprInput(draft.apr)}
+                      fallback={draft.apr}
+                      parse={toCreditCardNumber}
+                      step={0.01}
+                      max={100}
+                      onChange={(apr) => onPatch({ apr })}
+                    />
+                  </span>
+                </FormRowEnd>
+              )}
+            </EditRow>
 
-          <CreditCardField label="Кредитный лимит">
-            <CreditCardUsdInput
-              value={draft.limit}
-              onChange={(limit) => onPatch({ limit })}
-            />
-          </CreditCardField>
+            <EditRow label="Дата платежа">
+              {readOnly && !addFlow ? (
+                <InfoValue>
+                  {formatPaymentDueDayDisplay(resolvePaymentDueDay(draft))}
+                </InfoValue>
+              ) : (
+                <DirectNumberInput
+                  value={resolvePaymentDueDay(draft)}
+                  min={1}
+                  max={31}
+                  suffix="число"
+                  widthClassName="w-[3.5rem]"
+                  highlighted={editable}
+                  highlightClassName={activeControlClassName}
+                  onChange={(paymentDueDay) => onPatch(patchPaymentDueDay(paymentDueDay))}
+                />
+              )}
+            </EditRow>
+            {addFlow ? (
+              <p className="px-4 pb-2.5 text-xs text-zinc-500">
+                Число месяца, когда нужно платить по карте.
+              </p>
+            ) : null}
+          </>
+        ) : null}
+      </FormSection>
 
-          <CreditCardField label="Мин. платёж">
-            <CreditCardUsdInput
-              value={draft.minPayment}
-              onChange={(minPayment) => onPatch({ minPayment })}
-            />
-          </CreditCardField>
-        </div>
-      </BubbleCard>
+      {!addFlow || bankReady ? (
+        <>
+          <FormSection title="Балансы">
+            <EditRow label="Текущий баланс">
+              <EditableUsdRow
+                value={draft.balance}
+                onChange={(balance) => onPatch({ balance })}
+                readOnly={readOnly && !addFlow}
+                editable={editable}
+                activeControlClassName={activeControlClassName}
+              />
+            </EditRow>
 
-      <BubbleCard className="space-y-4 p-4">
-        <h2 className="text-sm font-semibold text-zinc-900">Условия</h2>
+            <EditRow label="Предыдущий баланс">
+              <EditableUsdRow
+                value={draft.previousBalance}
+                onChange={(previousBalance) => onPatch({ previousBalance })}
+                readOnly={readOnly && !addFlow}
+                editable={editable}
+                activeControlClassName={activeControlClassName}
+              />
+            </EditRow>
 
-        <div className="grid grid-cols-2 gap-3">
-          <CreditCardField label="Годовая ставка, %">
-            <input
-              className={creditCardInputClassName}
-              type="number"
-              min={0}
-              step="0.01"
-              value={draft.apr}
-              onChange={(event) =>
-                onPatch({ apr: toCreditCardNumber(event.target.value) })
-              }
-              required
-            />
-          </CreditCardField>
-
-          <CreditCardField label="Дней до срока">
-            <input
-              className={creditCardInputClassName}
-              type="number"
-              min={0}
-              step="1"
-              value={draft.daysUntilDue}
-              onChange={(event) =>
-                onPatch({
-                  daysUntilDue: toCreditCardNumber(event.target.value),
-                })
-              }
-              required
-            />
-          </CreditCardField>
-        </div>
-
-        <CreditCardField
-          label="Подпись срока на карте"
-          hint='Как показывается на плитке, например «22 июн»'
-        >
-          <input
-            className={creditCardInputClassName}
-            value={draft.dueDate}
-            onChange={(event) => onPatch({ dueDate: event.target.value })}
-            placeholder="22 июн"
-            required
-          />
-        </CreditCardField>
-      </BubbleCard>
-    </>
+            <EditRow label="Мин. платёж">
+              <InfoValue>
+                <UsdAmount amount={computedMinPayment} exact />
+              </InfoValue>
+            </EditRow>
+            <p className="px-4 pb-2.5 text-xs leading-relaxed text-zinc-500">
+              Считается автоматически: 1% от долга + месячные проценты, но не
+              меньше $25.
+            </p>
+          </FormSection>
+        </>
+      ) : null}
+    </div>
   );
 }

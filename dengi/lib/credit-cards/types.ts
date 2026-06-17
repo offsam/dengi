@@ -21,6 +21,8 @@ export type CreditCard = {
   balance: number;
   limit: number;
   apr: number;
+  /** Число месяца, когда нужно платить (1–31) */
+  paymentDueDay?: number;
   dueDate: string;
   daysUntilDue: number;
   minPayment: number;

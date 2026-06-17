@@ -10,24 +10,18 @@ import {
 import { CreditCardReportPanel } from "@/app/components/credit-card-report-panel";
 import { CreditCardSettingsPanel } from "@/app/components/credit-card-settings-panel";
 import { CreditCardTile } from "@/app/components/credit-card-tile";
+import { CreditCardTransactionsChart } from "@/app/components/credit-card-transactions-chart";
 import { CreditCardTransactionsPanel } from "@/app/components/credit-card-transactions-panel";
+import { SimpleDeleteDialog } from "@/app/components/simple-delete-dialog";
 import { useCreditCards } from "@/app/hooks/use-credit-cards";
 import { APP_PAGE_CLASS } from "@/lib/app-theme";
 import type { CreditCard } from "@/lib/credit-cards/types";
 
 function CreditCardDetailContent({ card }: { card: CreditCard }) {
   const router = useRouter();
-  const { updateCard } = useCreditCards();
-  const [tab, setTab] = useState<CreditCardDetailTab>("transactions");
-  const [draft, setDraft] = useState(card);
-  const [saved, setSaved] = useState(false);
-
-  const displayCard = tab === "settings" ? draft : card;
-
-  function patchDraft(patch: Partial<CreditCard>) {
-    setDraft((current) => ({ ...current, ...patch, id: card.id }));
-    setSaved(false);
-  }
+  const { updateCard, deleteCard } = useCreditCards();
+  const [tab, setTab] = useState<CreditCardDetailTab>("report");
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   return (
     <div className={APP_PAGE_CLASS}>
@@ -44,8 +38,12 @@ function CreditCardDetailContent({ card }: { card: CreditCard }) {
         </header>
 
         <div className="-mx-4">
-          <CreditCardTile {...displayCard} variant="detail" />
+          <CreditCardTile {...card} variant="detail" />
         </div>
+
+        {tab === "transactions" ? (
+          <CreditCardTransactionsChart cardId={card.id} />
+        ) : null}
 
         <CreditCardDetailTabs active={tab} onChange={setTab} />
 
@@ -58,32 +56,32 @@ function CreditCardDetailContent({ card }: { card: CreditCard }) {
         ) : null}
 
         {tab === "settings" ? (
-          <div className="space-y-3">
-            <CreditCardSettingsPanel
-              key={`${card.id}:${card.contract?.termsExtractedAt ?? "none"}`}
-              card={card}
-              draft={draft}
-              onDraftChange={patchDraft}
-              onSave={(next) => {
-                updateCard(next.id, next);
-                setDraft(next);
-                setSaved(true);
-                router.refresh();
-              }}
-              onPersist={(patch) => {
-                updateCard(card.id, patch);
-                setDraft((current) => ({ ...current, ...patch, id: card.id }));
-              }}
-            />
-            <p
-              className={`text-xs font-medium ${saved ? "text-emerald-600" : "text-transparent"}`}
-              aria-live="polite"
-            >
-              Настройки сохранены
-            </p>
-          </div>
+          <CreditCardSettingsPanel
+            key={`${card.id}:${card.contract?.termsExtractedAt ?? "none"}`}
+            card={card}
+            onSave={(next) => {
+              updateCard(next.id, next);
+              router.refresh();
+            }}
+            onPersist={(patch) => {
+              updateCard(card.id, patch);
+            }}
+            onDelete={() => setDeleteOpen(true)}
+          />
         ) : null}
       </main>
+
+      <SimpleDeleteDialog
+        open={deleteOpen}
+        title="Удалить карту?"
+        description={`«${card.name}» исчезнет с главного экрана. Транзакции по карте тоже будут недоступны.`}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={() => {
+          deleteCard(card.id);
+          setDeleteOpen(false);
+          router.push("/");
+        }}
+      />
     </div>
   );
 }

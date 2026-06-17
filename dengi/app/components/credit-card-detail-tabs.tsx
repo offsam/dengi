@@ -3,8 +3,8 @@ import { BubbleSegmentedControl } from "@/app/components/bubble-segmented-contro
 export type CreditCardDetailTab = "settings" | "transactions" | "report";
 
 const TABS: { id: CreditCardDetailTab; label: string }[] = [
-  { id: "transactions", label: "Транзакции" },
   { id: "report", label: "Отчёт" },
+  { id: "transactions", label: "Транзакции" },
   { id: "settings", label: "Настройки" },
 ];
 

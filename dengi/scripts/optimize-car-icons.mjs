@@ -35,23 +35,6 @@ function resizeWithSips(sourcePath) {
   execFileSync("sips", ["-Z", String(MAX_DIMENSION), sourcePath], { stdio: "pipe" });
 }
 
-/** Убирает прозрачные поля — машина занимает всю ширину PNG */
-function trimTransparentPadding(sourcePath) {
-  execFileSync(
-    "python3",
-    [
-      "-c",
-      `from PIL import Image
-path = ${JSON.stringify(sourcePath)}
-im = Image.open(path)
-bbox = im.getbbox()
-if bbox:
-    im.crop(bbox).save(path)`,
-    ],
-    { stdio: "pipe" }
-  );
-}
-
 function formatKb(bytes) {
   return `${Math.round(bytes / 1024)} KB`;
 }
@@ -68,7 +51,7 @@ for (const fileName of fileNames) {
   const publicPath = join(publicDir, fileName);
 
   resizeWithSips(sourcePath);
-  trimTransparentPadding(sourcePath);
+  // trimTransparentPadding отключён — ломает центровку и прозрачный фон иконок
   copyFileSync(sourcePath, publicPath);
 
   const libSize = statSync(sourcePath).size;
