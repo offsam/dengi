@@ -1,5 +1,8 @@
+"use client";
+
 import { formatCompactCardName } from "@/lib/credit-cards/compact-name";
 import { BubbleCard } from "@/app/components/bubble-card";
+import { useLocale } from "@/app/components/locale-provider";
 import { formatMoneyExact } from "@/lib/format-money";
 import {
   getIncomeSourceKindLabel,
@@ -42,8 +45,9 @@ export function IncomeSourceCard({
   variant?: "compact" | "detail";
   density?: "full" | "minimal";
 }) {
+  const { lang, t } = useLocale();
   const isDetail = variant === "detail";
-  const kindLabel = getIncomeSourceKindLabel({ kind, customKindLabel });
+  const kindLabel = getIncomeSourceKindLabel({ kind, customKindLabel }, lang);
 
   if (density === "minimal" && !isDetail) {
     const label = formatCompactCardName(name);
@@ -83,36 +87,39 @@ export function IncomeSourceCard({
       >
         {formatMoneyExact(monthlyAmount)}
       </p>
-      <p className={`text-zinc-500 ${isDetail ? "mt-1 text-sm" : "mt-0.5 text-xs"}`}>в месяц</p>
+      <p className={`text-zinc-500 ${isDetail ? "mt-1 text-sm" : "mt-0.5 text-xs"}`}>
+        {t("common.perMonth")}
+      </p>
     </BubbleCard>
   );
 }
 
 export function IncomeSourceOverviewPanel({ source }: { source: IncomeSource }) {
-  const kindLabel = getIncomeSourceKindLabel(source);
+  const { lang, t } = useLocale();
+  const kindLabel = getIncomeSourceKindLabel(source, lang);
   const yearly = source.monthlyAmount * 12;
 
   return (
     <BubbleCard className="space-y-3 p-4">
-      <h2 className="text-sm font-semibold text-zinc-900">Сводка</h2>
+      <h2 className="text-sm font-semibold text-zinc-900">{t("incomeCard.overviewTitle")}</h2>
       <div className="flex items-start justify-between gap-3">
-        <span className="text-sm text-zinc-500">Тип</span>
+        <span className="text-sm text-zinc-500">{t("incomeCard.type")}</span>
         <p className="text-sm font-semibold text-zinc-900">{kindLabel}</p>
       </div>
       <div className="flex items-start justify-between gap-3">
-        <span className="text-sm text-zinc-500">В месяц</span>
+        <span className="text-sm text-zinc-500">{t("common.perMonth")}</span>
         <p className="text-sm font-semibold tabular-nums text-emerald-600">
           {formatMoneyExact(source.monthlyAmount)}
         </p>
       </div>
       <div className="flex items-start justify-between gap-3">
-        <span className="text-sm text-zinc-500">В год</span>
+        <span className="text-sm text-zinc-500">{t("common.perYear")}</span>
         <p className="text-sm font-semibold tabular-nums text-zinc-900">
           {formatMoneyExact(yearly)}
         </p>
       </div>
       <p className="border-t border-white/35 pt-3 text-xs leading-relaxed text-zinc-500">
-        Только для вашего обзора — эти суммы не добавляются к активам и не меняют чистый капитал.
+        {t("incomeCard.overviewNote")}
       </p>
     </BubbleCard>
   );

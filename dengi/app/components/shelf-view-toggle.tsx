@@ -1,6 +1,7 @@
 "use client";
 
 import type { HomeShelfView } from "@/lib/home/shelf-view";
+import { useLocale } from "@/app/components/locale-provider";
 
 export function ShelfViewToggle({
   view,
@@ -9,11 +10,13 @@ export function ShelfViewToggle({
   view: HomeShelfView;
   onChange: (view: HomeShelfView) => void;
 }) {
+  const { t } = useLocale();
+
   return (
     <div
       className="inline-flex rounded-full bg-zinc-100 p-0.5"
       role="group"
-      aria-label="Вид полки"
+      aria-label={t("shelf.viewAria")}
     >
       <button
         type="button"
@@ -25,7 +28,7 @@ export function ShelfViewToggle({
             : "text-zinc-500 hover:text-zinc-800"
         }`}
       >
-        Полный
+        {t("shelf.full")}
       </button>
       <button
         type="button"
@@ -37,7 +40,7 @@ export function ShelfViewToggle({
             : "text-zinc-500 hover:text-zinc-800"
         }`}
       >
-        Компактный
+        {t("shelf.compact")}
       </button>
     </div>
   );

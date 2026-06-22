@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { useMemo } from "react";
 import { BubbleCard } from "@/app/components/bubble-card";
 import { DashboardMetricDonutChart } from "@/app/components/dashboard-metric-donut-chart";
+import { useLocale } from "@/app/components/locale-provider";
 import { UsdAmount } from "@/app/components/usd-amount";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
 import { useCreditCards } from "@/app/hooks/use-credit-cards";
@@ -13,10 +14,10 @@ import { useHousingBills } from "@/app/hooks/use-housing-bills";
 import { APP_PAGE_CLASS } from "@/lib/app-theme";
 import { computeDashboardMetrics } from "@/lib/dashboard/compute-metrics";
 import {
-  DASHBOARD_METRIC_TITLES,
   DASHBOARD_METRIC_TONES,
   computeDashboardMetricBreakdowns,
   computeDashboardMetricChartSegments,
+  getDashboardMetricTitle,
   parseDashboardMetricSlug,
   type DashboardMetricBreakdownLine,
   type DashboardMetricId,
@@ -56,6 +57,7 @@ export function DashboardMetricBreakdownView({ metricSlug }: { metricSlug: strin
 }
 
 function DashboardMetricBreakdownContent({ metricId }: { metricId: DashboardMetricId }) {
+  const { lang, t } = useLocale();
   const { cards } = useCreditCards();
   const { vehicles } = useAutoVehicles();
   const { accounts: debitAccounts } = useDebitCashAccounts();
@@ -84,13 +86,16 @@ function DashboardMetricBreakdownContent({ metricId }: { metricId: DashboardMetr
 
   const breakdowns = useMemo(
     () =>
-      computeDashboardMetricBreakdowns({
-        cards,
-        vehicles: activeVehicles,
-        debitAccounts,
-        bills,
-      }),
-    [cards, activeVehicles, debitAccounts, bills]
+      computeDashboardMetricBreakdowns(
+        {
+          cards,
+          vehicles: activeVehicles,
+          debitAccounts,
+          bills,
+        },
+        lang
+      ),
+    [cards, activeVehicles, debitAccounts, bills, lang]
   );
 
   const total = {
@@ -102,11 +107,11 @@ function DashboardMetricBreakdownContent({ metricId }: { metricId: DashboardMetr
 
   const lines = breakdowns[metricId];
   const chartSegments = useMemo(
-    () => computeDashboardMetricChartSegments(lines, total),
-    [lines, total]
+    () => computeDashboardMetricChartSegments(lines, total, lang),
+    [lines, total, lang]
   );
   const tone = DASHBOARD_METRIC_TONES[metricId];
-  const title = DASHBOARD_METRIC_TITLES[metricId];
+  const title = getDashboardMetricTitle(metricId, lang);
 
   return (
     <div className={APP_PAGE_CLASS}>
@@ -116,14 +121,16 @@ function DashboardMetricBreakdownContent({ metricId }: { metricId: DashboardMetr
             href="/"
             className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
           >
-            Назад
+            {t("common.back")}
           </Link>
           <h1 className="truncate text-sm font-semibold tracking-tight">{title}</h1>
           <span className="w-10" aria-hidden />
         </header>
 
         <BubbleCard className="px-3.5 py-3.5">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">Итого</p>
+          <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+            {t("common.total")}
+          </p>
           <p className="mt-1 text-2xl font-semibold tabular-nums">
             <UsdAmount amount={total} exact tone={tone} />
           </p>

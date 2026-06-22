@@ -5,6 +5,9 @@ import type { CreditCard } from "@/lib/credit-cards/types";
 import type { HousingBill } from "./housing-bills";
 import type { DebitCashAccount } from "./debit-accounts";
 
+import type { AppLang } from "@/lib/i18n/types";
+import { messages } from "@/lib/i18n/messages";
+
 export type DashboardMetricId =
   | "totalDebt"
   | "interestThisMonth"
@@ -38,11 +41,16 @@ export const DASHBOARD_CHART_COLORS = [
   "#69707A",
 ] as const;
 
+export function getDashboardMetricTitle(metricId: DashboardMetricId, lang: AppLang = "ru") {
+  return messages[lang].metrics[metricId];
+}
+
+/** @deprecated Используйте getDashboardMetricTitle(metricId, lang) */
 export const DASHBOARD_METRIC_TITLES: Record<DashboardMetricId, string> = {
-  totalDebt: "Общий долг",
-  interestThisMonth: "Проценты за месяц",
-  assets: "Активы",
-  billsDueSoon: "Счета скоро",
+  totalDebt: messages.ru.metrics.totalDebt,
+  interestThisMonth: messages.ru.metrics.interestThisMonth,
+  assets: messages.ru.metrics.assets,
+  billsDueSoon: messages.ru.metrics.billsDueSoon,
 };
 
 export const DASHBOARD_METRIC_SLUGS: Record<DashboardMetricId, string> = {
@@ -102,12 +110,16 @@ function cardBankLabel(card: CreditCard) {
   return BANKS[card.bankId]?.name ?? card.bankId;
 }
 
-export function computeDashboardMetricBreakdowns(input: {
-  cards: CreditCard[];
-  vehicles: AutoVehicle[];
-  debitAccounts: readonly DebitCashAccount[];
-  bills: HousingBill[];
-}) {
+export function computeDashboardMetricBreakdowns(
+  input: {
+    cards: CreditCard[];
+    vehicles: AutoVehicle[];
+    debitAccounts: readonly DebitCashAccount[];
+    bills: HousingBill[];
+  },
+  lang: AppLang = "ru"
+) {
+  const duePrefix = messages[lang].common.duePrefix;
   const financedVehicles = input.vehicles.filter(isFinancedVehicle);
 
   const totalDebt = sortLines([
@@ -177,7 +189,7 @@ export function computeDashboardMetricBreakdowns(input: {
       .map((bill) => ({
         id: `bill-${bill.id}`,
         label: bill.name,
-        detail: bill.date ? `Срок ${bill.date}` : undefined,
+        detail: bill.date ? `${duePrefix} ${bill.date}` : undefined,
         amount: bill.amount,
       }))
   );
@@ -194,21 +206,24 @@ export function sumBreakdownLines(lines: DashboardMetricBreakdownLine[]) {
   return lines.reduce((sum, line) => sum + line.amount, 0);
 }
 
-function resolveLineGroup(line: DashboardMetricBreakdownLine) {
+function resolveLineGroup(
+  line: DashboardMetricBreakdownLine,
+  groupLabels: Record<"cards" | "autoLoans" | "debit" | "autoAssets", string>
+) {
   if (line.id.startsWith("card-debt-") || line.id.startsWith("card-interest-")) {
-    return { id: "cards", label: "Кредитные карты" };
+    return { id: "cards", label: groupLabels.cards };
   }
 
   if (line.id.startsWith("vehicle-debt-") || line.id.startsWith("vehicle-interest-")) {
-    return { id: "auto-loans", label: "Автокредиты" };
+    return { id: "auto-loans", label: groupLabels.autoLoans };
   }
 
   if (line.id.startsWith("debit-")) {
-    return { id: "debit", label: "Дебет / наличные" };
+    return { id: "debit", label: groupLabels.debit };
   }
 
   if (line.id.startsWith("vehicle-asset-")) {
-    return { id: "auto-assets", label: "Авто" };
+    return { id: "auto-assets", label: groupLabels.autoAssets };
   }
 
   return { id: line.id, label: line.label };
@@ -244,12 +259,14 @@ function distributePercents(amounts: number[], total: number) {
 /** Группы для круговой диаграммы: карты, автокредиты, счета… */
 export function computeDashboardMetricChartSegments(
   lines: DashboardMetricBreakdownLine[],
-  total: number
+  total: number,
+  lang: AppLang = "ru"
 ): DashboardMetricChartSegment[] {
+  const groupLabels = messages[lang].breakdownGroups;
   const grouped = new Map<string, { label: string; amount: number }>();
 
   for (const line of lines) {
-    const group = resolveLineGroup(line);
+    const group = resolveLineGroup(line, groupLabels);
     const current = grouped.get(group.id);
 
     if (current) {

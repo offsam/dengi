@@ -1,7 +1,7 @@
 import type { CreditCardDraft } from "@/lib/credit-cards/types";
 import type { CreditCardTransactionType } from "@/lib/credit-cards/transactions/types";
 import type { CatalogEntityKind } from "./catalog";
-import { APP_LANG } from "@/lib/i18n/locale";
+import { readStoredAppLang } from "@/lib/i18n/storage";
 
 export type AssistantAddCardAction = {
   type: "add_card";
@@ -58,5 +58,5 @@ export function isNegative(text: string) {
 }
 
 export function getAssistantLocale(): "en" | "ru" {
-  return APP_LANG;
+  return readStoredAppLang();
 }

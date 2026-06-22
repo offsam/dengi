@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BubbleCard } from "@/app/components/bubble-card";
+import { useLocale } from "@/app/components/locale-provider";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
 import { useCreditCards } from "@/app/hooks/use-credit-cards";
 import { buildAppCatalog } from "@/lib/assistant/catalog";
@@ -39,6 +40,7 @@ function createMessage(role: AssistantMessage["role"], text: string): AssistantM
 }
 
 export function FloatingAssistant() {
+  const { t } = useLocale();
   const { cards, addCard, updateCard, getCard } = useCreditCards();
   const { vehicles } = useAutoVehicles();
   const catalog = useMemo(() => buildAppCatalog(cards, vehicles), [cards, vehicles]);
@@ -369,7 +371,7 @@ export function FloatingAssistant() {
         >
           <BubbleCard className="flex max-h-[min(24rem,70dvh)] flex-col overflow-hidden">
           <div className="border-b border-white/40 px-4 py-3">
-            <p className="text-sm font-semibold text-zinc-900">Помощник</p>
+            <p className="text-sm font-semibold text-zinc-900">{t("assistant.label")}</p>
             <p className="mt-0.5 text-xs text-zinc-500">
               Сначала правила, потом GPT-4o mini
             </p>
@@ -446,7 +448,7 @@ export function FloatingAssistant() {
 
       <button
         type="button"
-        aria-label="Помощник"
+        aria-label={t("assistant.label")}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { CreditCardAddDialog } from "@/app/components/credit-card-add-dialog";
 import { BubbleAddButton } from "@/app/components/bubble-add-button";
 import { CreditCardCarousel } from "@/app/components/credit-card-carousel";
+import { useLocale } from "@/app/components/locale-provider";
 import { ShelfViewToggle } from "@/app/components/shelf-view-toggle";
 import { useCreditCards } from "@/app/hooks/use-credit-cards";
 import { useHomeItemOrder } from "@/app/hooks/use-home-item-order";
@@ -12,6 +13,7 @@ import { useShelfViewFade } from "@/app/hooks/use-shelf-view-fade";
 import type { HomeShelfView } from "@/lib/home/shelf-view";
 
 export function CreditCardsShelf({ editOrder = false }: { editOrder?: boolean }) {
+  const { t } = useLocale();
   const { cards, addCard } = useCreditCards();
   const { orderedItems, moveItem } = useHomeItemOrder("creditCards", cards);
   const { view, setView } = useHomeShelfView("creditCards");
@@ -31,7 +33,7 @@ export function CreditCardsShelf({ editOrder = false }: { editOrder?: boolean })
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold tracking-tight text-zinc-900">
-            Кредитные карты
+            {t("shelf.creditCards")}
           </h2>
 
           <div className="flex shrink-0 items-center gap-2">
@@ -40,7 +42,7 @@ export function CreditCardsShelf({ editOrder = false }: { editOrder?: boolean })
             ) : null}
             {!editOrder ? (
               <BubbleAddButton
-                ariaLabel="Добавить кредитную карту"
+                ariaLabel={t("shelf.addCreditCard")}
                 onClick={() => {
                   setAddSession((current) => current + 1);
                   setAddOpen(true);

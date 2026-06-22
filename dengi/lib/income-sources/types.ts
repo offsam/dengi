@@ -1,3 +1,5 @@
+import type { AppLang } from "@/lib/i18n/types";
+import { messages } from "@/lib/i18n/messages";
 import { readIncomeSources } from "./storage";
 
 export type IncomeSourceKind = "salary" | "freelance" | "rental" | "other";
@@ -39,12 +41,15 @@ export function resolveIncomeSourceKindPreset(kind: IncomeSourceKind) {
   );
 }
 
-export function getIncomeSourceKindLabel(source: Pick<IncomeSource, "kind" | "customKindLabel">) {
+export function getIncomeSourceKindLabel(
+  source: Pick<IncomeSource, "kind" | "customKindLabel">,
+  lang: AppLang = "ru"
+) {
   if (source.kind === "other" && source.customKindLabel?.trim()) {
     return source.customKindLabel.trim();
   }
 
-  return resolveIncomeSourceKindPreset(source.kind).label;
+  return messages[lang].incomeKind[source.kind];
 }
 
 export function createEmptyIncomeSourceDraft(): IncomeSourceDraft {

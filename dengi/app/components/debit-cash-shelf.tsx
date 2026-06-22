@@ -9,6 +9,8 @@ import { HorizontalWheelScroll } from "@/app/components/horizontal-wheel-scroll"
 import { HorizontalReorderButtons } from "@/app/components/reorder-controls";
 import { ShelfMinimalRows, splitShelfItemsIntoTwoRows } from "@/app/components/shelf-minimal-rows";
 import { ShelfViewToggle } from "@/app/components/shelf-view-toggle";
+import { useLocale } from "@/app/components/locale-provider";
+import type { Translator } from "@/lib/i18n/translate";
 import { useDebitCashAccounts } from "@/app/hooks/use-debit-cash-accounts";
 import { useHomeItemOrder } from "@/app/hooks/use-home-item-order";
 import { useHomeShelfView } from "@/app/hooks/use-home-shelf-view";
@@ -22,7 +24,8 @@ function renderDebitItem(
   editOrder: boolean,
   index: number,
   total: number,
-  moveItem: (id: string, direction: -1 | 1) => void
+  moveItem: (id: string, direction: -1 | 1) => void,
+  t: Translator
 ) {
   const card = <DebitCashAccountCard account={account} density={density} />;
 
@@ -45,7 +48,7 @@ function renderDebitItem(
       key={account.id}
       href={`/debit/${account.id}`}
       className="block shrink-0 snap-start rounded-lg transition-transform active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
-      aria-label={`Открыть ${account.name}`}
+      aria-label={t("common.openItem", { name: account.name })}
     >
       {card}
     </Link>
@@ -53,6 +56,7 @@ function renderDebitItem(
 }
 
 export function DebitCashShelf({ editOrder = false }: { editOrder?: boolean }) {
+  const { t } = useLocale();
   const { accounts, addAccount } = useDebitCashAccounts();
   const { orderedItems, moveItem } = useHomeItemOrder("debitCash", accounts);
   const { view, setView } = useHomeShelfView("debitCash");
@@ -73,13 +77,13 @@ export function DebitCashShelf({ editOrder = false }: { editOrder?: boolean }) {
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold tracking-tight text-zinc-900">
-            Дебет / наличные
+            {t("shelf.debitCash")}
           </h2>
           {!editOrder ? (
             <div className="flex shrink-0 items-center gap-2">
               <ShelfViewToggle view={view} onChange={handleViewChange} />
               <BubbleAddButton
-                ariaLabel="Добавить счёт или кошелёк"
+                ariaLabel={t("shelf.addDebitCash")}
                 onClick={() => {
                   setAddSession((current) => current + 1);
                   setAddOpen(true);
@@ -101,9 +105,9 @@ export function DebitCashShelf({ editOrder = false }: { editOrder?: boolean }) {
 
               return (
                 <ShelfMinimalRows
-                  ariaLabel="Дебет и наличные"
+                  ariaLabel={t("shelf.debitCash")}
                   topRow={topRow.map((account, index) =>
-                    renderDebitItem(account, density, editOrder, index, total, moveItem)
+                    renderDebitItem(account, density, editOrder, index, total, moveItem, t)
                   )}
                   bottomRow={
                     bottomRow.length > 0
@@ -114,7 +118,8 @@ export function DebitCashShelf({ editOrder = false }: { editOrder?: boolean }) {
                             editOrder,
                             topRow.length + index,
                             total,
-                            moveItem
+                            moveItem,
+                            t
                           )
                         )
                       : undefined
@@ -125,10 +130,10 @@ export function DebitCashShelf({ editOrder = false }: { editOrder?: boolean }) {
           ) : (
             <HorizontalWheelScroll
               className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-4 pb-1 touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              ariaLabel="Дебет и наличные"
+              ariaLabel={t("shelf.debitCash")}
             >
               {orderedItems.map((account, index) =>
-                renderDebitItem(account, density, editOrder, index, orderedItems.length, moveItem)
+                renderDebitItem(account, density, editOrder, index, orderedItems.length, moveItem, t)
               )}
             </HorizontalWheelScroll>
           )}

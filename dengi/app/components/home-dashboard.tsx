@@ -5,20 +5,25 @@ import { IncomeSourcesShelf } from "@/app/components/income-sources-shelf";
 import { AutoVehiclesShelf } from "@/app/components/auto-vehicles-shelf";
 import { CreditCardsShelf } from "@/app/components/credit-cards-shelf";
 import { DebitCashShelf } from "@/app/components/debit-cash-shelf";
-import { FinanceSyncStatus } from "@/app/components/finance-sync-status";
 import { HomeDashboardSummary } from "@/app/components/home-dashboard-summary";
 import { HousingBillsShelf } from "@/app/components/housing-bills-shelf";
 import { VerticalReorderButtons } from "@/app/components/reorder-controls";
+import { useFinanceCloudSync } from "@/app/hooks/use-finance-cloud-sync";
 import { useHomeShelfOrder } from "@/app/hooks/use-home-shelf-order";
+import { useLocale } from "@/app/components/locale-provider";
 import { APP_PAGE_CLASS } from "@/lib/app-theme";
 import type { HomeShelfId } from "@/lib/home/layout-order";
 
 function HomeOrderToggle({
   editOrder,
   onToggle,
+  orderLabel,
+  doneLabel,
 }: {
   editOrder: boolean;
   onToggle: () => void;
+  orderLabel: string;
+  doneLabel: string;
 }) {
   return (
     <div className="flex justify-end">
@@ -32,7 +37,7 @@ function HomeOrderToggle({
             : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900"
         }`}
       >
-        {editOrder ? "Готово" : "Порядок"}
+        {editOrder ? doneLabel : orderLabel}
       </button>
     </div>
   );
@@ -82,20 +87,23 @@ function HomeShelfSection({
 export function HomeDashboard() {
   const [editOrder, setEditOrder] = useState(false);
   const { orderedShelfIds, moveShelf } = useHomeShelfOrder();
+  const { t } = useLocale();
+  useFinanceCloudSync();
 
   return (
     <div className={APP_PAGE_CLASS}>
       <main className="mx-auto flex w-full max-w-md flex-col gap-8 px-4 py-6">
         <HomeDashboardSummary />
 
-        <FinanceSyncStatus />
-
-        <HomeOrderToggle editOrder={editOrder} onToggle={() => setEditOrder((value) => !value)} />
+        <HomeOrderToggle
+          editOrder={editOrder}
+          onToggle={() => setEditOrder((value) => !value)}
+          orderLabel={t("common.order")}
+          doneLabel={t("common.done")}
+        />
 
         {editOrder ? (
-          <p className="-mt-4 text-xs leading-relaxed text-zinc-500">
-            Стрелки ↑↓ — порядок категорий. ←→ — порядок карточек внутри категории.
-          </p>
+          <p className="-mt-4 text-xs leading-relaxed text-zinc-500">{t("home.orderHint")}</p>
         ) : null}
 
         {orderedShelfIds.map((shelfId, index) => (

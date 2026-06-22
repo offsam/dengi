@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { BubbleCard } from "@/app/components/bubble-card";
+import { useLocale } from "@/app/components/locale-provider";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
 import { useCreditCards } from "@/app/hooks/use-credit-cards";
 import { useDebitCashAccounts } from "@/app/hooks/use-debit-cash-accounts";
@@ -11,6 +12,7 @@ import { formatMoney, formatMoneyExact } from "@/lib/format-money";
 import { computeDashboardMetrics } from "@/lib/dashboard/compute-metrics";
 import {
   dashboardMetricHref,
+  getDashboardMetricTitle,
   type DashboardMetricId,
 } from "@/lib/dashboard/metric-breakdown";
 import { isActiveAutoVehicle } from "@/lib/auto-vehicles/status";
@@ -20,11 +22,13 @@ function MetricCard({
   value,
   tone = "neutral",
   metricId,
+  openBreakdownLabel,
 }: {
   label: string;
   value: string;
   tone?: "neutral" | "danger" | "positive";
   metricId: DashboardMetricId;
+  openBreakdownLabel: string;
 }) {
   const valueTone =
     tone === "danger"
@@ -37,7 +41,7 @@ function MetricCard({
     <Link
       href={dashboardMetricHref(metricId)}
       className="block text-left transition-transform active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
-      aria-label={`${label}: ${value}. Открыть состав`}
+      aria-label={`${label}: ${value}. ${openBreakdownLabel}`}
     >
       <BubbleCard className="px-3 py-3">
         <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">{label}</p>
@@ -48,6 +52,7 @@ function MetricCard({
 }
 
 export function HomeDashboardSummary() {
+  const { lang, t } = useLocale();
   const { cards } = useCreditCards();
   const { vehicles } = useAutoVehicles();
   const { accounts: debitAccounts } = useDebitCashAccounts();
@@ -74,13 +79,15 @@ export function HomeDashboardSummary() {
     [cards, activeVehicles, debitAccounts, billsDueSoon]
   );
 
+  const openBreakdownLabel = t("common.openBreakdown");
+
   return (
     <>
       <header className="flex items-end justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight">dengi</h1>
         <div className="text-right">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-            Чистый капитал
+            {t("home.netWorth")}
           </p>
           <p className="text-2xl font-semibold tabular-nums text-zinc-900">
             {formatMoney(metrics.netWorth)}
@@ -88,29 +95,33 @@ export function HomeDashboardSummary() {
         </div>
       </header>
 
-      <section aria-label="Сводные показатели" className="grid grid-cols-2 gap-3">
+      <section aria-label={t("home.metricsAria")} className="grid grid-cols-2 gap-3">
         <MetricCard
-          label="Общий долг"
+          label={getDashboardMetricTitle("totalDebt", lang)}
           value={formatMoney(metrics.totalDebt)}
           tone="danger"
           metricId="totalDebt"
+          openBreakdownLabel={openBreakdownLabel}
         />
         <MetricCard
-          label="Проценты за месяц"
+          label={getDashboardMetricTitle("interestThisMonth", lang)}
           value={formatMoneyExact(metrics.interestThisMonth)}
           tone="danger"
           metricId="interestThisMonth"
+          openBreakdownLabel={openBreakdownLabel}
         />
         <MetricCard
-          label="Активы"
+          label={getDashboardMetricTitle("assets", lang)}
           value={formatMoney(metrics.assets)}
           tone="positive"
           metricId="assets"
+          openBreakdownLabel={openBreakdownLabel}
         />
         <MetricCard
-          label="Счета скоро"
+          label={getDashboardMetricTitle("billsDueSoon", lang)}
           value={formatMoneyExact(metrics.billsDueSoon)}
           metricId="billsDueSoon"
+          openBreakdownLabel={openBreakdownLabel}
         />
       </section>
     </>

@@ -1,9 +1,18 @@
-/** Текущая локаль приложения (позже — переключение ru/en). */
-export const APP_LOCALE = "ru-RU";
-export const APP_LANG = "ru" as const;
+import type { AppLang } from "./types";
+import { DEFAULT_APP_LANG } from "./types";
 
 /** Даты в US-формате: MM/DD/YYYY */
 export const APP_DATE_LOCALE = "en-US";
+
+export function resolveAppLocale(lang: AppLang = DEFAULT_APP_LANG) {
+  return lang === "en" ? "en-US" : "ru-RU";
+}
+
+/** @deprecated Используйте resolveAppLocale(lang) */
+export const APP_LOCALE = resolveAppLocale("ru");
+
+/** @deprecated Используйте readStoredAppLang() или useLocale() */
+export const APP_LANG = "ru" as const;
 
 function parseAppDateInput(date: Date | string): Date {
   if (typeof date === "string") {
@@ -31,7 +40,6 @@ export function formatAppDate(
   return new Intl.DateTimeFormat(APP_DATE_LOCALE, options).format(value);
 }
 
-/** Короткая дата по умолчанию: 03/12/2019 */
 export function formatAppDateNumeric(date: Date | string) {
   return formatAppDate(date, {
     day: "2-digit",

@@ -8,6 +8,7 @@ import { AutoVehicleAddedDialog } from "@/app/components/auto-vehicle-added-dial
 import { BubbleAddButton } from "@/app/components/bubble-add-button";
 import { AutoVehiclesCarousel } from "@/app/components/auto-vehicles-carousel";
 import { ShelfViewToggle } from "@/app/components/shelf-view-toggle";
+import { useLocale } from "@/app/components/locale-provider";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
 import { useHomeItemOrder } from "@/app/hooks/use-home-item-order";
 import { useHomeShelfView } from "@/app/hooks/use-home-shelf-view";
@@ -52,6 +53,7 @@ function Shelf({
 }
 
 export function AutoVehiclesShelf({ editOrder = false }: { editOrder?: boolean }) {
+  const { t } = useLocale();
   const router = useRouter();
   const { activeVehicles, addVehicle } = useAutoVehicles();
   const { orderedItems, moveItem } = useHomeItemOrder("autoVehicles", activeVehicles);
@@ -92,8 +94,8 @@ export function AutoVehiclesShelf({ editOrder = false }: { editOrder?: boolean }
   return (
     <>
       <Shelf
-        title="Авто"
-        onAddLabel="Добавить авто"
+        title={t("shelf.auto")}
+        onAddLabel={t("shelf.addAuto")}
         editOrder={editOrder}
         onAdd={() => {
           setAddSession((current) => current + 1);
@@ -104,7 +106,7 @@ export function AutoVehiclesShelf({ editOrder = false }: { editOrder?: boolean }
             href="/auto/archive"
             className="text-xs font-medium text-zinc-500 underline-offset-2 hover:text-zinc-900 hover:underline"
           >
-            Архив
+            {t("common.archive")}
           </Link>
         }
         headerTrailing={
