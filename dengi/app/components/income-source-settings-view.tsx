@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { IncomeSourceCard, IncomeSourceOverviewPanel } from "@/app/components/income-source-card";
 import { IncomeSourceFormFields } from "@/app/components/income-source-form-fields";
 import { SimpleDeleteDialog } from "@/app/components/simple-delete-dialog";
+import { useLocale } from "@/app/components/locale-provider";
 import { useClientMounted } from "@/app/hooks/use-client-mounted";
 import { useIncomeSources } from "@/app/hooks/use-income-sources";
 import { APP_PAGE_CLASS } from "@/lib/app-theme";
@@ -42,6 +43,7 @@ function IncomeSourceSettingsPanel({
   onSave: (next: IncomeSource) => void;
   onDelete: () => void;
 }) {
+  const { t } = useLocale();
   const [mode, setMode] = useState<PanelMode>("view");
   const [draft, setDraft] = useState(source);
   const [customKindLabel, setCustomKindLabel] = useState(source.customKindLabel ?? "");
@@ -90,7 +92,7 @@ function IncomeSourceSettingsPanel({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-zinc-900">Настройки</h2>
+        <h2 className="text-sm font-semibold text-zinc-900">{t("credit.tabs.settings")}</h2>
         {editing ? (
           <div className="flex gap-2">
             <button
@@ -98,14 +100,14 @@ function IncomeSourceSettingsPanel({
               onClick={cancelEditing}
               className="rounded-full px-3 py-1.5 text-xs font-semibold text-zinc-600 hover:bg-zinc-100"
             >
-              Отмена
+              {t("common.cancel")}
             </button>
             <button
               type="button"
               onClick={saveEditing}
               className="rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white"
             >
-              Сохранить
+              {t("common.save")}
             </button>
           </div>
         ) : (
@@ -114,13 +116,13 @@ function IncomeSourceSettingsPanel({
             onClick={() => setMode("edit")}
             className="rounded-full px-3 py-1.5 text-xs font-semibold text-zinc-600 hover:bg-zinc-100"
           >
-            Изменить
+            {t("common.edit")}
           </button>
         )}
       </div>
 
       {saved ? (
-        <p className="text-xs font-medium text-emerald-600">Сохранено</p>
+        <p className="text-xs font-medium text-emerald-600">{t("common.saved")}</p>
       ) : null}
 
       <IncomeSourceFormFields
@@ -138,7 +140,7 @@ function IncomeSourceSettingsPanel({
           onClick={onDelete}
           className="w-full rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100"
         >
-          Удалить источник
+          {t("income.settings.delete")}
         </button>
       ) : null}
     </div>
@@ -146,10 +148,11 @@ function IncomeSourceSettingsPanel({
 }
 
 function IncomeSourceDetailContent({ source }: { source: IncomeSource }) {
+  const { lang, t } = useLocale();
   const router = useRouter();
   const { updateSource, deleteSource } = useIncomeSources();
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const kindLabel = getIncomeSourceKindLabel(source);
+  const kindLabel = getIncomeSourceKindLabel(source, lang);
 
   return (
     <div className={APP_PAGE_CLASS}>
@@ -159,7 +162,7 @@ function IncomeSourceDetailContent({ source }: { source: IncomeSource }) {
             href="/"
             className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
           >
-            Назад
+            {t("common.back")}
           </Link>
           <h1 className="truncate text-sm font-semibold tracking-tight">{source.name}</h1>
           <span className="w-10" aria-hidden />
@@ -169,7 +172,7 @@ function IncomeSourceDetailContent({ source }: { source: IncomeSource }) {
           {kindLabel}
         </p>
         <p className="text-center text-[11px] leading-relaxed text-zinc-500">
-          Личная заметка — не влияет на чистый капитал и сводку на главной.
+          {t("income.settings.note")}
         </p>
 
         <IncomeSourceCard {...source} variant="detail" />
@@ -186,8 +189,8 @@ function IncomeSourceDetailContent({ source }: { source: IncomeSource }) {
 
       <SimpleDeleteDialog
         open={deleteOpen}
-        title="Удалить источник дохода?"
-        description={`«${source.name}» исчезнет с главного экрана.`}
+        title={t("income.deleteDialog.title")}
+        description={t("income.deleteDialog.description", { name: source.name })}
         onClose={() => setDeleteOpen(false)}
         onConfirm={() => {
           setDeleteOpen(false);
@@ -200,6 +203,7 @@ function IncomeSourceDetailContent({ source }: { source: IncomeSource }) {
 }
 
 export function IncomeSourceSettingsView({ sourceId }: { sourceId: string }) {
+  const { t } = useLocale();
   const mounted = useClientMounted();
   const { getSource } = useIncomeSources();
   const source = mounted ? getSource(sourceId) : null;
@@ -223,9 +227,9 @@ export function IncomeSourceSettingsView({ sourceId }: { sourceId: string }) {
           href="/"
           className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
         >
-          На главную
+          {t("common.goHome")}
         </Link>
-        <p className="text-sm text-zinc-600">Источник дохода не найден.</p>
+        <p className="text-sm text-zinc-600">{t("income.notFound")}</p>
       </div>
     );
   }

@@ -38,20 +38,11 @@ import { toAutoVehicleNumber } from "@/lib/auto-vehicles/form-utils";
 import { resolveBodyTypeIcon } from "@/lib/car-icons";
 import { CarIconImage } from "@/app/components/car-icon-image";
 import { formatAppDateNumeric } from "@/lib/i18n/locale";
+import { useLocale } from "@/app/components/locale-provider";
 import type { AutoVehicle, AutoVehicleFinancingType } from "@/lib/auto-vehicles/vehicle";
 import type { AutoVehicleInsuranceBillingPeriod } from "@/lib/auto-vehicles/insurance";
 
-const FINANCING_OPTIONS: { id: AutoVehicleFinancingType; label: string }[] = [
-  { id: "credit", label: "Кредит" },
-  { id: "leasing", label: "Лизинг" },
-  { id: "cash", label: "Наличные" },
-];
-
-const FINANCING_TYPE_LABELS: Record<AutoVehicleFinancingType, string> = {
-  credit: "Кредит",
-  leasing: "Лизинг",
-  cash: "Наличные",
-};
+const FINANCING_TYPES: AutoVehicleFinancingType[] = ["credit", "leasing", "cash"];
 
 const fieldClassName =
   "w-full min-w-0 border-0 bg-transparent py-0 text-right text-[15px] leading-none text-zinc-900 outline-none ring-0 placeholder:text-zinc-300 focus:ring-0 tabular-nums";
@@ -111,13 +102,18 @@ function InsuranceBillingPeriodToggle({
   value: AutoVehicleInsuranceBillingPeriod;
   onChange: (next: AutoVehicleInsuranceBillingPeriod) => void;
 }) {
+  const { t } = useLocale();
+
   return (
     <div className="max-w-[7rem] shrink-0 rounded-xl border border-white/70 bg-white/22 p-0.5">
       <SegmentedControl
-        options={INSURANCE_BILLING_OPTIONS}
+        options={INSURANCE_BILLING_OPTIONS.map((option) => ({
+          id: option.id,
+          label: t(`auto.insurance.${option.id}`),
+        }))}
         value={value}
         onChange={onChange}
-        ariaLabel="Период оплаты страховки"
+        ariaLabel={t("auto.form.insurancePeriodAria")}
         variant="bubble"
       />
     </div>
@@ -147,14 +143,18 @@ function InsurancePaymentRow({
   onBillingPeriodChange: (next: AutoVehicleInsuranceBillingPeriod) => void;
   onPaymentAmountChange: (amount: number) => void;
 }) {
+  const { t } = useLocale();
+
   return (
     <div className="flex min-h-[48px] items-center gap-2 border-b border-white/35 px-4 py-2.5 last:border-b-0">
       <div className="flex min-w-0 items-center gap-1.5">
-        <span className="shrink-0 text-[15px] leading-tight text-zinc-900">Платёж в</span>
+        <span className="shrink-0 text-[15px] leading-tight text-zinc-900">
+          {t("auto.form.insurancePaymentIn")}
+        </span>
 
         {readOnly ? (
           <span className="shrink-0 text-[15px] leading-tight text-zinc-700">
-            {billingPeriod === "annual" ? "год" : "месяц"}
+            {billingPeriod === "annual" ? t("auto.insurance.annual") : t("auto.insurance.monthly")}
           </span>
         ) : (
           <InsuranceBillingPeriodToggle
@@ -172,7 +172,8 @@ function InsurancePaymentRow({
                 <UsdAmount amount={annualPayment} exact />
                 {monthlyPayment > 0 ? (
                   <span className="text-xs text-zinc-500">
-                    (<UsdAmount amount={monthlyPayment} exact />/мес)
+                    (<UsdAmount amount={monthlyPayment} exact />
+                    {t("auto.form.perMonthSuffix")})
                   </span>
                 ) : null}
               </span>
@@ -255,6 +256,7 @@ export function AutoVehicleFormFields({
   /** Только просмотр — без селектов и полей ввода */
   readOnly?: boolean;
 }) {
+  const { t } = useLocale();
   const catalogEntry = getVehicleCatalogEntry(draft.catalogId);
   const make = catalogEntry?.make ?? VEHICLE_CATALOG_MAKES[0];
   const models = getVehicleModelsForMake(make);
@@ -268,8 +270,12 @@ export function AutoVehicleFormFields({
     ? catalogEntry.trim
       ? `${catalogEntry.model} ${catalogEntry.trim}`
       : catalogEntry.model
-    : "—";
+    : t("common.dash");
   const bodyTypeIcon = resolveBodyTypeIcon(draft.bodyIconId);
+  const financingOptions = FINANCING_TYPES.map((id) => ({
+    id,
+    label: t(`auto.financing.${id}`),
+  }));
   const insuranceBillingPeriod = resolveInsuranceBillingPeriod(draft);
   const insuranceMonthlyPayment = resolveInsuranceMonthlyPayment(draft);
   const insuranceAnnualPayment = resolveInsuranceAnnualPayment(draft);
@@ -317,8 +323,8 @@ export function AutoVehicleFormFields({
 
   return (
     <div className="space-y-5">
-      <FormSection title="Автомобиль">
-        <EditRow label="Марка">
+      <FormSection title={t("auto.form.sectionVehicle")}>
+        <EditRow label={t("auto.form.make")}>
           {readOnly ? (
             <InfoValue>{make}</InfoValue>
           ) : (
@@ -348,7 +354,7 @@ export function AutoVehicleFormFields({
           )}
         </EditRow>
 
-        <EditRow label="Модель">
+        <EditRow label={t("auto.form.model")}>
           {readOnly ? (
             <InfoValue>{modelLabel}</InfoValue>
           ) : (
@@ -376,7 +382,7 @@ export function AutoVehicleFormFields({
           )}
         </EditRow>
 
-        <EditRow label="Год">
+        <EditRow label={t("auto.form.year")}>
           {readOnly ? (
             <InfoValue>{draft.year}</InfoValue>
           ) : (
@@ -391,7 +397,7 @@ export function AutoVehicleFormFields({
           )}
         </EditRow>
 
-        <EditRow label="Пробег, mi">
+        <EditRow label={t("auto.form.mileage")}>
           {readOnly ? (
             <InfoValue>{draft.mileage} mi</InfoValue>
           ) : (
@@ -407,7 +413,7 @@ export function AutoVehicleFormFields({
           )}
         </EditRow>
 
-        <EditRow label="Тип кузова">
+        <EditRow label={t("auto.form.bodyType")}>
           {readOnly ? (
             <ReadonlyFormValue>
               <span className="inline-flex items-center gap-2 whitespace-nowrap text-[15px] leading-none text-zinc-900">
@@ -418,7 +424,7 @@ export function AutoVehicleFormFields({
                     <span className="inline-block h-6 w-10 rounded bg-zinc-200/60" aria-hidden />
                   }
                 />
-                {bodyTypeIcon.label}
+                {t(`auto.bodyTypes.${bodyTypeIcon.id}`)}
               </span>
             </ReadonlyFormValue>
           ) : (
@@ -435,11 +441,11 @@ export function AutoVehicleFormFields({
       <section className="space-y-2">
         <div className="space-y-1">
           <h2 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-            {showFinancingPicker ? "Финансы" : FINANCING_TYPE_LABELS[financingType]}
+            {showFinancingPicker ? t("auto.form.sectionFinancing") : t(`auto.financing.${financingType}`)}
           </h2>
           {showFinancingPicker ? (
             <BubbleSegmentedControl
-              options={FINANCING_OPTIONS}
+              options={financingOptions}
               value={financingType}
               onChange={(nextFinancingType) => {
                 const patch: Partial<AutoVehicle> = { financingType: nextFinancingType };
@@ -448,13 +454,13 @@ export function AutoVehicleFormFields({
                 }
                 patchWithFinancing(patch);
               }}
-              ariaLabel="Способ покупки"
+              ariaLabel={t("auto.form.financingPickerAria")}
             />
           ) : null}
         </div>
 
         <BubbleCard>
-          <EditRow label="Цена покупки">
+          <EditRow label={t("auto.form.purchasePrice")}>
             {readOnly ? (
               <ReadonlyFormValue>
                 <UsdAmount amount={draft.purchasePrice} />
@@ -471,10 +477,10 @@ export function AutoVehicleFormFields({
             )}
           </EditRow>
 
-          <EditRow label="Дата покупки">
+          <EditRow label={t("auto.form.purchaseDate")}>
             {readOnly ? (
               <InfoValue>
-                {draft.purchaseDate ? formatAppDateNumeric(draft.purchaseDate) : "—"}
+                {draft.purchaseDate ? formatAppDateNumeric(draft.purchaseDate) : t("common.dash")}
               </InfoValue>
             ) : (
               <FormRowEnd>
@@ -501,10 +507,16 @@ export function AutoVehicleFormFields({
           {showFinancingTerms ? (
             <>
               <EditRow
-                label={financingType === "leasing" ? "Срок лизинга" : "Срок кредита"}
+                label={
+                  financingType === "leasing" ? t("auto.form.leaseTerm") : t("auto.form.loanTerm")
+                }
               >
                 {readOnly ? (
-                  <InfoValue>{toLoanTermMonthsInput(draft.loanTermMonths) || "0"} мес</InfoValue>
+                  <InfoValue>
+                    {t("auto.form.termMonthsSuffix", {
+                      n: toLoanTermMonthsInput(draft.loanTermMonths) || "0",
+                    })}
+                  </InfoValue>
                 ) : (
                   <FormRowEnd>
                     <span className={editable ? activeControlClassName : ""}>
@@ -521,7 +533,7 @@ export function AutoVehicleFormFields({
 
               <EditRow
                 label={
-                  financingType === "leasing" ? "Процент по лизингу" : "Процент по кредиту"
+                  financingType === "leasing" ? t("auto.form.leaseApr") : t("auto.form.loanApr")
                 }
               >
                 {readOnly ? (
@@ -540,7 +552,7 @@ export function AutoVehicleFormFields({
                 )}
               </EditRow>
 
-              <EditRow label="День платежа">
+              <EditRow label={t("auto.form.paymentDay")}>
                 {readOnly ? (
                   <InfoValue>{resolveLoanPaymentDay(draft)}</InfoValue>
                 ) : (
@@ -556,7 +568,7 @@ export function AutoVehicleFormFields({
                 )}
               </EditRow>
 
-              <EditRow label="Платёж в месяц">
+              <EditRow label={t("auto.form.monthlyPayment")}>
                 {readOnly ? (
                   <ReadonlyFormValue>
                     <UsdAmount amount={draft.loanPayment} exact />
@@ -577,10 +589,10 @@ export function AutoVehicleFormFields({
         </BubbleCard>
       </section>
 
-      <FormSection title="Страховка">
-        <EditRow label="Страховая компания">
+      <FormSection title={t("auto.form.sectionInsurance")}>
+        <EditRow label={t("auto.form.insuranceProvider")}>
           {readOnly ? (
-            <InfoValue>{draft.insuranceProviderName?.trim() || "—"}</InfoValue>
+            <InfoValue>{draft.insuranceProviderName?.trim() || t("common.dash")}</InfoValue>
           ) : (
             <FormRowEnd>
               <input

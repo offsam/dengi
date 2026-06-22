@@ -9,22 +9,24 @@ import {
   inlineEditIconButtonClassName,
   PencilIcon,
 } from "@/app/components/inline-edit-icons";
+import { useLocale } from "@/app/components/locale-provider";
 import { useCreditCardTransactions } from "@/app/hooks/use-credit-card-transactions";
 import { useCreditCards } from "@/app/hooks/use-credit-cards";
 import { UsdAmount } from "@/app/components/usd-amount";
 import { APP_BUBBLE_INPUT } from "@/lib/app-theme";
 import { formatAppDate } from "@/lib/i18n/locale";
+import { getCreditTransactionTypeLabel } from "@/lib/i18n/labels";
 import type {
   CreditCardTransaction,
   CreditCardTransactionType,
 } from "@/lib/credit-cards/transactions/types";
 
-const TYPE_LABELS: Record<CreditCardTransactionType, string> = {
-  purchase: "Покупка",
-  payment: "Платёж",
-  interest: "Проценты",
-  fee: "Комиссия",
-};
+const TRANSACTION_TYPES: CreditCardTransactionType[] = [
+  "purchase",
+  "payment",
+  "interest",
+  "fee",
+];
 
 const TYPE_TONES: Record<CreditCardTransactionType, string> = {
   purchase: "text-zinc-900",
@@ -70,11 +72,13 @@ function TransactionFields({
   onDescriptionChange: (value: string) => void;
   onDateChange: (value: string) => void;
 }) {
+  const { lang, t } = useLocale();
+
   return (
     <div className="grid grid-cols-4 gap-3">
       <label className="col-span-2 block space-y-1.5">
         <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-          Дата
+          {t("common.date")}
         </span>
         <input
           className={inputClassName}
@@ -87,7 +91,7 @@ function TransactionFields({
 
       <label className="col-span-2 block space-y-1.5">
         <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-          Категория
+          {t("common.category")}
         </span>
         <select
           className={inputClassName}
@@ -96,9 +100,9 @@ function TransactionFields({
             onTypeChange(event.target.value as CreditCardTransactionType)
           }
         >
-          {Object.entries(TYPE_LABELS).map(([value, label]) => (
+          {TRANSACTION_TYPES.map((value) => (
             <option key={value} value={value}>
-              {label}
+              {getCreditTransactionTypeLabel(value, lang)}
             </option>
           ))}
         </select>
@@ -106,7 +110,7 @@ function TransactionFields({
 
       <label className="col-span-1 block space-y-1.5">
         <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-          Сумма
+          {t("common.amount")}
         </span>
         <input
           className={inputClassName}
@@ -121,13 +125,13 @@ function TransactionFields({
 
       <label className="col-span-3 block space-y-1.5">
         <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-          Описание
+          {t("common.description")}
         </span>
         <input
           className={inputClassName}
           value={description}
           onChange={(event) => onDescriptionChange(event.target.value)}
-          placeholder="Необязательно"
+          placeholder={t("common.optional")}
         />
       </label>
     </div>
@@ -148,6 +152,7 @@ function TransactionEditForm({
     occurredAt: string;
   }) => void;
 }) {
+  const { lang } = useLocale();
   const [type, setType] = useState(transaction.type);
   const [amount, setAmount] = useState(String(transaction.amount));
   const [description, setDescription] = useState(transaction.description);
@@ -164,7 +169,7 @@ function TransactionEditForm({
     onSave({
       type,
       amount: parsedAmount,
-      description: description.trim() || TYPE_LABELS[type],
+      description: description.trim() || getCreditTransactionTypeLabel(type, lang),
       occurredAt: new Date(`${date}T12:00:00.000Z`).toISOString(),
     });
   }
@@ -200,6 +205,8 @@ function TransactionRow({
   onEdit: () => void;
   onCancel: () => void;
 }) {
+  const { lang, t } = useLocale();
+
   return (
     <div className="border-b border-white/40 last:border-b-0">
       <div className="flex items-center justify-between gap-3 px-4 py-3">
@@ -208,7 +215,8 @@ function TransactionRow({
             {transaction.description}
           </p>
           <p className="mt-0.5 text-xs text-zinc-500">
-            {TYPE_LABELS[transaction.type]} · {formatDate(transaction.occurredAt)}
+            {getCreditTransactionTypeLabel(transaction.type, lang)} ·{" "}
+            {formatDate(transaction.occurredAt)}
           </p>
         </div>
 
@@ -226,14 +234,14 @@ function TransactionRow({
                 type="submit"
                 form={editFormId}
                 className={`${inlineEditIconButtonClassName} text-[#5DAA8C] hover:bg-[#5DAA8C]/10 hover:text-[#48946F]`}
-                aria-label="Сохранить"
+                aria-label={t("common.save")}
               >
                 <CheckIcon />
               </button>
               <button
                 type="button"
                 className={inlineEditIconButtonClassName}
-                aria-label="Отменить"
+                aria-label={t("common.cancel")}
                 onClick={onCancel}
               >
                 <CloseIcon />
@@ -243,7 +251,7 @@ function TransactionRow({
             <button
               type="button"
               className={inlineEditIconButtonClassName}
-              aria-label="Редактировать транзакцию"
+              aria-label={t("credit.transactions.editAria")}
               onClick={onEdit}
             >
               <PencilIcon />
@@ -256,6 +264,7 @@ function TransactionRow({
 }
 
 export function CreditCardTransactionsPanel({ cardId }: { cardId: string }) {
+  const { lang, t } = useLocale();
   const { getCard, updateCard } = useCreditCards();
   const card = getCard(cardId);
   const { transactions, addTransaction, updateTransaction } =
@@ -274,19 +283,19 @@ export function CreditCardTransactionsPanel({ cardId }: { cardId: string }) {
 
     const parsedAmount = Number(amount);
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setAddError("Укажите сумму больше нуля.");
+      setAddError(t("credit.transactions.errorAmount"));
       return;
     }
 
     if (!card) {
-      setAddError("Карта не найдена.");
+      setAddError(t("credit.transactions.errorCardNotFound"));
       return;
     }
 
     addTransaction({
       type,
       amount: parsedAmount,
-      description: description.trim() || TYPE_LABELS[type],
+      description: description.trim() || getCreditTransactionTypeLabel(type, lang),
       occurredAt: new Date(`${date}T12:00:00.000Z`).toISOString(),
     });
 
@@ -327,9 +336,11 @@ export function CreditCardTransactionsPanel({ cardId }: { cardId: string }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-zinc-900">Транзакции</p>
+        <p className="text-sm font-semibold text-zinc-900">{t("credit.tabs.transactions")}</p>
         <BubbleAddButton
-          ariaLabel={open ? "Закрыть форму добавления" : "Добавить транзакцию"}
+          ariaLabel={
+            open ? t("credit.transactions.closeFormAria") : t("credit.transactions.addAria")
+          }
           active={open}
           onClick={() => {
             setEditingId(null);
@@ -356,7 +367,7 @@ export function CreditCardTransactionsPanel({ cardId }: { cardId: string }) {
               type="submit"
               className="w-full rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
             >
-              Добавить транзакцию
+              {t("credit.transactions.submit")}
             </button>
 
             {addError ? (
@@ -370,7 +381,7 @@ export function CreditCardTransactionsPanel({ cardId }: { cardId: string }) {
 
       {transactions.length === 0 ? (
         <BubbleCard className="border-dashed px-4 py-8 text-center text-sm text-zinc-500">
-          По этой карте пока нет транзакций.
+          {t("credit.transactions.empty")}
         </BubbleCard>
       ) : (
         <BubbleCard className="py-0">

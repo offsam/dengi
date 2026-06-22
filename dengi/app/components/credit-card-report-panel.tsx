@@ -8,6 +8,7 @@ import {
   PencilIcon,
 } from "@/app/components/inline-edit-icons";
 import { useMemo, useState } from "react";
+import { useLocale } from "@/app/components/locale-provider";
 import { useCreditCardStatementBalances } from "@/app/hooks/use-credit-card-statement-balances";
 import { useCreditCardTransactions } from "@/app/hooks/use-credit-card-transactions";
 import { UsdAmount } from "@/app/components/usd-amount";
@@ -60,6 +61,7 @@ function MonthlyDebtEditForm({
   formId: string;
   onSave: (debt: number) => void;
 }) {
+  const { t } = useLocale();
   const [amount, setAmount] = useState(String(entry.debt));
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -78,7 +80,7 @@ function MonthlyDebtEditForm({
       <BubbleCard className="space-y-2 p-3">
         <label className="block space-y-1.5">
           <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-            Долг на конец месяца
+            {t("credit.report.monthEndDebt")}
           </span>
           <input
             className={APP_BUBBLE_INPUT}
@@ -97,6 +99,8 @@ function MonthlyDebtEditForm({
 }
 
 function MonthlyDebtDeltaStripe({ delta }: { delta: number | null }) {
+  const { t } = useLocale();
+
   if (delta === null) {
     return null;
   }
@@ -117,7 +121,9 @@ function MonthlyDebtDeltaStripe({ delta }: { delta: number | null }) {
       className={`mt-1 w-1 shrink-0 self-stretch rounded-full ${
         increased ? "bg-rose-500" : "bg-emerald-500"
       }`}
-      aria-label={increased ? "Долг вырос" : "Долг снизился"}
+      aria-label={
+        increased ? t("credit.report.debtIncreased") : t("credit.report.debtDecreased")
+      }
     />
   );
 }
@@ -141,6 +147,7 @@ function MonthlyDebtRow({
   onEdit: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useLocale();
   const delta = entry.deltaFromPreviousMonth;
   const showDelta = delta !== null && delta !== 0;
   const increased = (delta ?? 0) > 0;
@@ -171,10 +178,12 @@ function MonthlyDebtRow({
             >
               {increased ? "+" : "−"}
               <UsdAmount amount={Math.abs(delta)} exact className="text-inherit" />
-              <span className="ml-1 font-medium text-zinc-500">к прошлому месяцу</span>
+              <span className="ml-1 font-medium text-zinc-500">
+                {t("credit.report.toPrevMonth")}
+              </span>
             </p>
           ) : delta === 0 ? (
-            <p className="mt-1 text-xs text-zinc-500">Без изменений</p>
+            <p className="mt-1 text-xs text-zinc-500">{t("credit.report.noChange")}</p>
           ) : null}
         </button>
 
@@ -190,14 +199,14 @@ function MonthlyDebtRow({
                   type="submit"
                   form={editFormId}
                   className={`${inlineEditIconButtonClassName} text-[#5DAA8C] hover:bg-[#5DAA8C]/10 hover:text-[#48946F]`}
-                  aria-label="Сохранить"
+                  aria-label={t("common.save")}
                 >
                   <CheckIcon />
                 </button>
                 <button
                   type="button"
                   className={inlineEditIconButtonClassName}
-                  aria-label="Отменить"
+                  aria-label={t("common.cancel")}
                   onClick={onCancel}
                 >
                   <CloseIcon />
@@ -207,7 +216,7 @@ function MonthlyDebtRow({
               <button
                 type="button"
                 className={inlineEditIconButtonClassName}
-                aria-label="Редактировать закрытие выписки"
+                aria-label={t("credit.report.editStatementAria")}
                 onClick={onEdit}
               >
                 <PencilIcon />
@@ -227,6 +236,7 @@ export function CreditCardReportPanel({
   cardId: string;
   currentBalance: number;
 }) {
+  const { t } = useLocale();
   const { transactions } = useCreditCardTransactions(cardId);
   const { manualBalances, saveStatementBalance } =
     useCreditCardStatementBalances(cardId);
@@ -270,7 +280,7 @@ export function CreditCardReportPanel({
     <div className="space-y-5">
       <div className="space-y-3">
         <div>
-          <p className="text-sm font-semibold text-zinc-900">Отчёт</p>
+          <p className="text-sm font-semibold text-zinc-900">{t("credit.tabs.report")}</p>
           {activeMonth ? (
             <p className="mt-1 text-xs text-zinc-500">
               {activeMonth.label}
@@ -282,21 +292,21 @@ export function CreditCardReportPanel({
         {monthSummary ? (
           <div className="grid grid-cols-2 gap-3">
             <ReportMetric
-              label="Расходы"
+              label={t("credit.report.spending")}
               value={<UsdAmount amount={monthSummary.spending} exact />}
             />
             <ReportMetric
-              label="Проценты"
+              label={t("credit.report.interest")}
               value={<UsdAmount amount={monthSummary.interest} exact tone="danger" />}
               tone="danger"
             />
             <ReportMetric
-              label="Платежи"
+              label={t("credit.report.payments")}
               value={<UsdAmount amount={monthSummary.payments} exact tone="positive" />}
               tone="positive"
             />
             <ReportMetric
-              label="Комиссии"
+              label={t("credit.report.fees")}
               value={<UsdAmount amount={monthSummary.fees} exact tone="danger" />}
               tone="danger"
             />
@@ -306,10 +316,9 @@ export function CreditCardReportPanel({
 
       <div className="space-y-3">
         <div>
-          <p className="text-sm font-semibold text-zinc-900">Долг по месяцам</p>
+          <p className="text-sm font-semibold text-zinc-900">{t("credit.report.debtByMonth")}</p>
           <p className="mt-1 text-xs text-zinc-500">
-            От сегодня и до {MAX_MONTHLY_DEBT_HISTORY} месяцев назад. Карандаш — ввести
-            закрытие выписки вручную.
+            {t("credit.report.debtByMonthHint", { n: MAX_MONTHLY_DEBT_HISTORY })}
           </p>
         </div>
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BubbleCard } from "@/app/components/bubble-card";
 import { UsdAmount, UsdAmountInput } from "@/app/components/usd-amount";
+import { useLocale } from "@/app/components/locale-provider";
 import {
   DEBIT_CASH_ACCOUNTS,
   formatDebitCashAccountLabel,
@@ -12,30 +13,6 @@ import type {
   AutoVehicleRemoveMode,
   AutoVehicleSoldDetails,
 } from "@/lib/auto-vehicles/vehicle";
-
-const OPTIONS: {
-  mode: AutoVehicleRemoveMode;
-  title: string;
-  description: string;
-  tone?: "danger";
-}[] = [
-  {
-    mode: "with-records",
-    title: "Удалить авто и все транзакции",
-    description: "Машина, платежи и расходы по ней исчезнут без восстановления.",
-    tone: "danger",
-  },
-  {
-    mode: "sold",
-    title: "Автомобиль продан",
-    description: "Скрыть из гаража. История платежей и расходов сохранится.",
-  },
-  {
-    mode: "vehicle-only",
-    title: "Удалить только автомобиль",
-    description: "Запись об авто удалится, транзакции останутся в данных.",
-  },
-];
 
 const fieldClassName =
   "w-full min-w-0 border-0 bg-transparent py-0 text-right text-[15px] leading-none text-zinc-900 outline-none ring-0 focus:ring-0";
@@ -77,11 +54,36 @@ export function AutoVehicleDeleteDialog({
   onClose: () => void;
   onConfirm: (mode: AutoVehicleRemoveMode, sold?: AutoVehicleSoldDetails) => void;
 }) {
+  const { lang, t } = useLocale();
   const [step, setStep] = useState<"choose" | "sold">("choose");
   const [soldPrice, setSoldPrice] = useState(0);
   const [soldLoanPayoff, setSoldLoanPayoff] = useState(0);
   const [soldWalletId, setSoldWalletId] = useState("dc-3");
   const [ignoreLoanPayoff, setIgnoreLoanPayoff] = useState(false);
+
+  const options: {
+    mode: AutoVehicleRemoveMode;
+    title: string;
+    description: string;
+    tone?: "danger";
+  }[] = [
+    {
+      mode: "with-records",
+      title: t("auto.deleteDialog.withRecordsTitle"),
+      description: t("auto.deleteDialog.withRecordsDescription"),
+      tone: "danger",
+    },
+    {
+      mode: "sold",
+      title: t("auto.deleteDialog.soldOptionTitle"),
+      description: t("auto.deleteDialog.soldOptionDescription"),
+    },
+    {
+      mode: "vehicle-only",
+      title: t("auto.deleteDialog.vehicleOnlyTitle"),
+      description: t("auto.deleteDialog.vehicleOnlyDescription"),
+    },
+  ];
 
   const showLoanFields = hasLoanBalance(vehicle);
   const effectiveLoanPayoff = showLoanFields && !ignoreLoanPayoff ? soldLoanPayoff : 0;
@@ -178,7 +180,7 @@ export function AutoVehicleDeleteDialog({
       <button
         type="button"
         className="absolute inset-0 bg-black/40"
-        aria-label="Закрыть"
+        aria-label={t("auto.deleteDialog.closeAria")}
         onClick={handleClose}
       />
 
@@ -190,19 +192,19 @@ export function AutoVehicleDeleteDialog({
                 id="delete-auto-title"
                 className="text-sm font-semibold tracking-tight text-zinc-900"
               >
-                Убрать автомобиль
+                {t("auto.deleteDialog.title")}
               </h2>
               <button
                 type="button"
                 onClick={handleClose}
                 className="rounded-full px-2 py-1 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-900"
               >
-                Отмена
+                {t("common.cancel")}
               </button>
             </div>
 
             <ul className="space-y-2">
-              {OPTIONS.map((option) => (
+              {options.map((option) => (
                 <li key={option.mode}>
                   <button
                     type="button"
@@ -231,21 +233,21 @@ export function AutoVehicleDeleteDialog({
                 id="delete-auto-title"
                 className="text-sm font-semibold tracking-tight text-zinc-900"
               >
-                Продажа автомобиля
+                {t("auto.deleteDialog.soldTitle")}
               </h2>
               <button
                 type="button"
                 onClick={() => setStep("choose")}
                 className="rounded-full px-2 py-1 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-900"
               >
-                Назад
+                {t("common.back")}
               </button>
             </div>
 
             <div className="overflow-hidden rounded-xl bg-white ring-1 ring-zinc-200/60">
               {showLoanFields ? (
                 <>
-                  <FormRow label="Остаток долга">
+                  <FormRow label={t("auto.deleteDialog.remainingDebt")}>
                     <UsdAmount amount={vehicle.remaining} exact />
                   </FormRow>
                   <div className="flex min-h-[48px] items-center gap-3 border-b border-zinc-100 px-4 py-2.5">
@@ -257,19 +259,19 @@ export function AutoVehicleDeleteDialog({
                         className="size-4 shrink-0 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400"
                       />
                       <span className="text-[15px] leading-tight text-zinc-900">
-                        Игнорировать остаток в банке
+                        {t("auto.deleteDialog.ignoreBankBalance")}
                       </span>
                     </label>
                   </div>
                 </>
               ) : null}
 
-              <FormRow label="Сумма продажи">
+              <FormRow label={t("auto.deleteDialog.soldPrice")}>
                 <UsdAmountInput value={soldPrice} onChange={handleSoldPriceChange} />
               </FormRow>
 
               {showLoanFields && !ignoreLoanPayoff ? (
-                <FormRow label="На кредит">
+                <FormRow label={t("auto.deleteDialog.toLoan")}>
                   <UsdAmountInput
                     value={soldLoanPayoff}
                     onChange={handleSoldLoanPayoffChange}
@@ -277,11 +279,11 @@ export function AutoVehicleDeleteDialog({
                 </FormRow>
               ) : null}
 
-              <FormRow label="На счёт">
+              <FormRow label={t("auto.deleteDialog.toAccount")}>
                 <UsdAmount amount={walletAmount} exact />
               </FormRow>
 
-              <FormRow label="Кошелёк">
+              <FormRow label={t("auto.deleteDialog.wallet")}>
                 <select
                   className={`${fieldClassName} max-w-full truncate`}
                   value={soldWalletId}
@@ -289,7 +291,7 @@ export function AutoVehicleDeleteDialog({
                 >
                   {DEBIT_CASH_ACCOUNTS.map((account) => (
                     <option key={account.id} value={account.id}>
-                      {formatDebitCashAccountLabel(account)}
+                      {formatDebitCashAccountLabel(account, lang)}
                     </option>
                   ))}
                 </select>
@@ -299,8 +301,8 @@ export function AutoVehicleDeleteDialog({
             {showLoanFields ? (
               <p className="mt-2 px-1 text-xs leading-snug text-zinc-500">
                 {ignoreLoanPayoff
-                  ? "Вся выручка поступит на выбранный счёт. Остаток в банке останется без изменений."
-                  : "Из выручки сначала погашается кредит, остаток поступает на выбранный счёт."}
+                  ? t("auto.deleteDialog.soldHintIgnore")
+                  : t("auto.deleteDialog.soldHintPayoff")}
               </p>
             ) : null}
 
@@ -310,14 +312,14 @@ export function AutoVehicleDeleteDialog({
                 className="w-full rounded-full bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
                 onClick={handleSoldConfirm}
               >
-                Подтвердить продажу
+                {t("auto.deleteDialog.confirmSale")}
               </button>
               <button
                 type="button"
                 className="w-full py-2 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900"
                 onClick={handleClose}
               >
-                Отмена
+                {t("common.cancel")}
               </button>
             </div>
           </>

@@ -17,6 +17,7 @@ import { AutoVehicleDeleteDialog } from "@/app/components/auto-vehicle-delete-di
 import { AutoVehicleSettingsPanel } from "@/app/components/auto-vehicle-settings-panel";
 import { AutoVehicleStatsPanel } from "@/app/components/auto-vehicle-stats-panel";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
+import { useLocale } from "@/app/components/locale-provider";
 import { buildVehicleDisplayHeading } from "@/lib/auto-vehicles";
 import {
   CREDIT_STATS_CONTENT_OFFSET_TOP_PX,
@@ -27,6 +28,7 @@ import { APP_BUBBLE_SHELL, APP_PAGE_CLASS } from "@/lib/app-theme";
 import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
 
 function AutoVehicleDetailContent({ vehicle }: { vehicle: AutoVehicle }) {
+  const { t } = useLocale();
   const router = useRouter();
   const { updateVehicle, disposeVehicle } = useAutoVehicles();
   const [tab, setTab] = useState<AutoVehicleDetailTab>("stats");
@@ -55,7 +57,7 @@ function AutoVehicleDetailContent({ vehicle }: { vehicle: AutoVehicle }) {
             href="/"
             className="shrink-0 text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
           >
-            Назад
+            {t("common.back")}
           </Link>
           <div className="min-w-0 max-w-[70%] text-right">
             <p className="truncate text-sm font-semibold tracking-tight text-zinc-900">
@@ -141,6 +143,7 @@ function AutoVehicleDetailContent({ vehicle }: { vehicle: AutoVehicle }) {
 }
 
 export function AutoVehicleSettingsView({ vehicleId }: { vehicleId: string }) {
+  const { t } = useLocale();
   const mounted = useClientMounted();
   const { getVehicle } = useAutoVehicles();
   const vehicle = getVehicle(vehicleId);
@@ -164,9 +167,9 @@ export function AutoVehicleSettingsView({ vehicleId }: { vehicleId: string }) {
           href="/"
           className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
         >
-          На главную
+          {t("common.goHome")}
         </Link>
-        <p className="text-sm text-zinc-600">Автомобиль не найден.</p>
+        <p className="text-sm text-zinc-600">{t("auto.notFound")}</p>
       </div>
     );
   }

@@ -12,6 +12,7 @@ import {
   type CryptoExchangeId,
 } from "@/lib/dashboard/debit-accounts";
 import { toCreditCardNumber } from "@/app/components/credit-card-form-fields";
+import { useLocale } from "@/app/components/locale-provider";
 
 const fieldClassName =
   "w-full min-w-0 border-0 bg-transparent py-0 text-right text-[15px] leading-none text-zinc-900 outline-none ring-0 placeholder:text-zinc-300 focus:ring-0";
@@ -88,6 +89,7 @@ export function DebitCryptoFormFields({
   addFlow?: boolean;
   readOnly?: boolean;
 }) {
+  const { t } = useLocale();
   const incognito = draft.incognito ?? false;
   const showCustomExchange = draft.exchangeId === "other";
   const editable = addFlow ? true : !readOnly;
@@ -97,10 +99,10 @@ export function DebitCryptoFormFields({
 
   return (
     <div className="space-y-5">
-      <FormSection title="Основное">
-        <EditRow label="Инкогнито">
+      <FormSection title={t("common.sectionMain")}>
+        <EditRow label={t("debit.form.incognito")}>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-500">Скрыть биржу</span>
+            <span className="text-xs text-zinc-500">{t("debit.form.incognitoHintCrypto")}</span>
             <IncognitoToggle
               checked={incognito}
               disabled={readOnly && !addFlow}
@@ -117,11 +119,11 @@ export function DebitCryptoFormFields({
 
         {!incognito ? (
           <>
-            <EditRow label="Биржа">
+            <EditRow label={t("debit.crypto.exchange")}>
               {readOnly && !addFlow ? (
                 <ReadonlyFormValue>
                   <span className="text-[15px] text-zinc-700">
-                    {resolveDebitExchangeLabel(draft) ?? "Не указана"}
+                    {resolveDebitExchangeLabel(draft) ?? t("debit.crypto.notSpecified")}
                   </span>
                 </ReadonlyFormValue>
               ) : (
@@ -138,7 +140,7 @@ export function DebitCryptoFormFields({
                       });
                     }}
                   >
-                    <option value="">Не указывать</option>
+                    <option value="">{t("debit.crypto.dontSpecify")}</option>
                     {POPULAR_CRYPTO_EXCHANGE_IDS.map((exchangeId) => (
                       <option key={exchangeId} value={exchangeId}>
                         {CRYPTO_EXCHANGES[exchangeId].name}
@@ -151,7 +153,7 @@ export function DebitCryptoFormFields({
             </EditRow>
 
             {showCustomExchange ? (
-              <EditRow label="Название биржи">
+              <EditRow label={t("debit.crypto.exchangeName")}>
                 <FormRowEnd>
                   <span className={APP_BUBBLE_INSET_CONTROL}>
                     <input
@@ -168,19 +170,19 @@ export function DebitCryptoFormFields({
             ) : null}
 
             <p className="px-4 pb-2.5 text-xs leading-relaxed text-zinc-500">
-              Биржа необязательна — можно оставить пустым или включить инкогнито.
+              {t("debit.crypto.optionalHint")}
             </p>
           </>
         ) : (
           <p className="px-4 pb-2.5 text-xs leading-relaxed text-zinc-500">
-            Биржа не будет видна на карточке.
+            {t("debit.crypto.incognitoHint")}
           </p>
         )}
 
-        <EditRow label="Название">
+        <EditRow label={t("common.name")}>
           {readOnly && !addFlow ? (
             <ReadonlyFormValue>
-              <span className="text-[15px] text-zinc-700">{draft.name || "—"}</span>
+              <span className="text-[15px] text-zinc-700">{draft.name || t("common.dash")}</span>
             </ReadonlyFormValue>
           ) : (
             <FormRowEnd>
@@ -189,7 +191,7 @@ export function DebitCryptoFormFields({
                   type="text"
                   className={`${fieldClassName} w-[9rem]`}
                   value={draft.name}
-                  placeholder="Криптокошелёк"
+                  placeholder={t("debit.crypto.walletPlaceholder")}
                   disabled={readOnly && !addFlow}
                   onChange={(event) => onPatch({ name: event.target.value })}
                 />
@@ -199,8 +201,8 @@ export function DebitCryptoFormFields({
         </EditRow>
       </FormSection>
 
-      <FormSection title="Баланс">
-        <EditRow label="Сумма">
+      <FormSection title={t("common.balance")}>
+        <EditRow label={t("common.amount")}>
           {readOnly && !addFlow ? (
             <ReadonlyFormValue>
               <UsdAmount amount={draft.balance} exact />

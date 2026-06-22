@@ -1,8 +1,13 @@
+"use client";
+
 import { BubbleCard } from "@/app/components/bubble-card";
+import { useLocale } from "@/app/components/locale-provider";
 import { formatCompactCardName } from "@/lib/credit-cards/compact-name";
 import { UsdAmount } from "@/app/components/usd-amount";
 import { BankLogo } from "@/lib/bank-logos";
 import { formatMoneyExact } from "@/lib/format-money";
+import { displayDebitAccount } from "@/lib/i18n/labels";
+import { resolveAppLocale } from "@/lib/i18n/locale";
 import type { DebitCashAccount } from "@/lib/dashboard/debit-accounts";
 import {
   debitKindLabel,
@@ -38,7 +43,8 @@ function DebitCardHeader({
   account: DebitCashAccount;
   large?: boolean;
 }) {
-  const institution = resolveDebitInstitutionLabel(account);
+  const { lang } = useLocale();
+  const institution = resolveDebitInstitutionLabel(account, lang);
   const showBankLogo =
     account.kind === "bank" && account.bankId && !account.incognito;
 
@@ -77,7 +83,7 @@ function DebitCardHeader({
           {institution}
         </p>
         <p className={`truncate font-semibold text-zinc-900 ${large ? "text-lg" : "text-sm"}`}>
-          {account.kind === "cash" ? "Кошелёк" : account.name}
+          {displayDebitAccount(account, lang)}
         </p>
       </div>
     </div>
@@ -87,6 +93,7 @@ function DebitCardHeader({
 export type DebitCashTileDensity = "full" | "minimal";
 
 function DebitMinimalMark({ account }: { account: DebitCashAccount }) {
+  const { lang } = useLocale();
   const showBankLogo =
     account.kind === "bank" && account.bankId && !account.incognito;
 
@@ -101,7 +108,7 @@ function DebitMinimalMark({ account }: { account: DebitCashAccount }) {
     );
   }
 
-  const institution = resolveDebitInstitutionLabel(account);
+  const institution = resolveDebitInstitutionLabel(account, lang);
   const badgeLabel = account.incognito ? "···" : institution.slice(0, 1);
 
   return (
@@ -121,13 +128,14 @@ export function DebitCashAccountCard({
   variant?: "compact" | "detail";
   density?: DebitCashTileDensity;
 }) {
+  const { lang, t } = useLocale();
   const isDetail = variant === "detail";
 
   if (density === "minimal" && !isDetail) {
     const label =
       account.kind === "cash"
-        ? "Наличные"
-        : formatCompactCardName(account.name);
+        ? t("debit.kind.cash")
+        : formatCompactCardName(account.name, lang);
 
     return (
       <BubbleCard className="w-[115px] shrink-0 p-2">
@@ -157,24 +165,25 @@ export function DebitCashAccountCard({
 
 /** Черновой обзор счёта */
 export function DebitCashOverviewPanel({ account }: { account: DebitCashAccount }) {
+  const { lang, t } = useLocale();
   const rows = [
-    { label: "Тип", value: debitKindLabel(account) },
+    { label: t("common.type"), value: debitKindLabel(account, lang) },
     {
-      label: account.incognito ? "Отображение" : "Источник",
-      value: resolveDebitInstitutionLabel(account),
+      label: account.incognito ? t("debit.overview.displayLabel") : t("debit.overview.sourceLabel"),
+      value: resolveDebitInstitutionLabel(account, lang),
     },
-    { label: "Баланс", value: formatMoneyExact(account.balance) },
+    { label: t("common.balance"), value: formatMoneyExact(account.balance) },
     {
-      label: "Доля в активах",
+      label: t("debit.overview.shareOfAssets"),
       value: "≈ 18%",
-      hint: "Черновик — позже посчитаем от общего капитала",
+      hint: t("debit.overview.shareHint"),
     },
   ];
 
   return (
     <div className="space-y-3">
       <BubbleCard className="space-y-3 p-4">
-        <h2 className="text-sm font-semibold text-zinc-900">Сводка</h2>
+        <h2 className="text-sm font-semibold text-zinc-900">{t("common.summary")}</h2>
         {rows.map((row) => (
           <div key={row.label} className="flex items-start justify-between gap-3">
             <span className="text-sm text-zinc-500">{row.label}</span>
@@ -189,12 +198,10 @@ export function DebitCashOverviewPanel({ account }: { account: DebitCashAccount 
       </BubbleCard>
 
       <BubbleCard className="space-y-2 p-4">
-        <h2 className="text-sm font-semibold text-zinc-900">Цели</h2>
-        <p className="text-sm text-zinc-600">
-          Черновик: здесь появятся целевой баланс и прогресс накоплений.
-        </p>
+        <h2 className="text-sm font-semibold text-zinc-900">{t("debit.overview.goals")}</h2>
+        <p className="text-sm text-zinc-600">{t("debit.overview.goalsHint")}</p>
         <div className="flex items-baseline justify-between gap-2 pt-1">
-          <span className="text-xs text-zinc-500">Цель</span>
+          <span className="text-xs text-zinc-500">{t("debit.overview.goal")}</span>
           <UsdAmount amount={Math.max(account.balance * 1.5, 1000)} exact className="text-sm font-semibold text-zinc-900" />
         </div>
       </BubbleCard>
@@ -204,16 +211,33 @@ export function DebitCashOverviewPanel({ account }: { account: DebitCashAccount 
 
 /** Черновой список операций */
 export function DebitCashActivityPanel({ account }: { account: DebitCashAccount }) {
+  const { lang, t } = useLocale();
+  const dateFormatter = new Intl.DateTimeFormat(resolveAppLocale(lang), {
+    month: "short",
+    day: "numeric",
+  });
   const placeholder = [
-    { title: "Пополнение", date: "12 июн", amount: 420 },
-    { title: "Перевод на карту", date: "8 июн", amount: -150 },
-    { title: "Зарплата", date: "1 июн", amount: 2_800 },
+    {
+      title: t("preset.deposit"),
+      date: dateFormatter.format(new Date("2024-06-12T12:00:00")),
+      amount: 420,
+    },
+    {
+      title: t("preset.transferToCard"),
+      date: dateFormatter.format(new Date("2024-06-08T12:00:00")),
+      amount: -150,
+    },
+    {
+      title: t("preset.salary"),
+      date: dateFormatter.format(new Date("2024-06-01T12:00:00")),
+      amount: 2_800,
+    },
   ];
 
   return (
     <BubbleCard className="divide-y divide-zinc-100/80 p-1">
       <p className="px-3 py-2 text-xs text-zinc-500">
-        Черновые операции для {account.name}
+        {t("debit.activity.placeholder", { name: account.name })}
       </p>
       {placeholder.map((entry) => (
         <div key={entry.title} className="flex items-center justify-between gap-3 px-3 py-3">

@@ -1,0 +1,78 @@
+export const homeMessages = {
+  ru: {
+    netWorth: "Чистый капитал",
+    metricsAria: "Сводные показатели",
+    orderHint: "Стрелки ↑↓ — порядок категорий. ←→ — порядок карточек внутри категории.",
+    metrics: {
+      totalDebt: "Общий долг",
+      interestThisMonth: "Проценты за месяц",
+      assets: "Активы",
+      billsDueSoon: "Счета скоро",
+    },
+    breakdownGroups: {
+      cards: "Кредитные карты",
+      autoLoans: "Автокредиты",
+      debit: "Дебет / наличные",
+      autoAssets: "Авто",
+    },
+    shelf: {
+      viewAria: "Вид полки",
+      full: "Полный",
+      compact: "Компактный",
+      creditCards: "Кредитные карты",
+      addCreditCard: "Добавить кредитную карту",
+      incomeSources: "Источники доходов",
+      addIncomeSource: "Добавить источник дохода",
+      incomeNote:
+        "Личная заметка: откуда ждёте деньги. Не входит в чистый капитал и другие расчёты на главной.",
+      debitCash: "Дебет / наличные",
+      addDebitCash: "Добавить счёт или кошелёк",
+      housingBills: "Жильё и счета",
+      addHousingBill: "Добавить счёт",
+      auto: "Авто",
+      addAuto: "Добавить авто",
+    },
+    dashboard: {
+      breakdownAria: "Состав: {title}",
+      breakdownEmpty: "Пока нет данных для этой суммы.",
+    },
+  },
+  en: {
+    netWorth: "Net worth",
+    metricsAria: "Summary metrics",
+    orderHint: "↑↓ reorder categories. ←→ reorder cards within a category.",
+    metrics: {
+      totalDebt: "Total debt",
+      interestThisMonth: "Interest this month",
+      assets: "Assets",
+      billsDueSoon: "Bills due soon",
+    },
+    breakdownGroups: {
+      cards: "Credit cards",
+      autoLoans: "Auto loans",
+      debit: "Debit / cash",
+      autoAssets: "Vehicles",
+    },
+    shelf: {
+      viewAria: "Shelf view",
+      full: "Full",
+      compact: "Compact",
+      creditCards: "Credit cards",
+      addCreditCard: "Add credit card",
+      incomeSources: "Income sources",
+      addIncomeSource: "Add income source",
+      incomeNote:
+        "Personal note: where you expect money from. Not included in net worth or home summary.",
+      debitCash: "Debit / cash",
+      addDebitCash: "Add account or wallet",
+      housingBills: "Housing & bills",
+      addHousingBill: "Add bill",
+      auto: "Vehicles",
+      addAuto: "Add vehicle",
+    },
+    dashboard: {
+      breakdownAria: "Breakdown: {title}",
+      breakdownEmpty: "No data for this amount yet.",
+    },
+  },
+} as const;

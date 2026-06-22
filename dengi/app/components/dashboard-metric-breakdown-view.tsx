@@ -142,13 +142,13 @@ function DashboardMetricBreakdownContent({ metricId }: { metricId: DashboardMetr
           </BubbleCard>
         ) : null}
 
-        <section aria-label={`Состав: ${title}`}>
+        <section aria-label={t("dashboard.breakdownAria", { title })}>
           <BubbleCard className="overflow-hidden py-0">
             {lines.length > 0 ? (
               lines.map((line) => <BreakdownRow key={line.id} line={line} tone={tone} />)
             ) : (
               <p className="px-3.5 py-8 text-center text-sm text-zinc-500">
-                Пока нет данных для этой суммы.
+                {t("dashboard.breakdownEmpty")}
               </p>
             )}
           </BubbleCard>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BubbleAddDialog } from "@/app/components/bubble-add-dialog";
 import { HousingBillCard } from "@/app/components/housing-bill-card";
 import { HousingBillFormFields } from "@/app/components/housing-bill-form-fields";
+import { useLocale } from "@/app/components/locale-provider";
 import {
   createEmptyHousingBillDraft,
   draftToPreviewHousingBill,
@@ -19,6 +20,7 @@ export function HousingBillAddDialog({
   onClose: () => void;
   onAdd: (draft: HousingBillDraft) => void;
 }) {
+  const { t } = useLocale();
   const [draft, setDraft] = useState(createEmptyHousingBillDraft);
 
   function patchDraft(patch: Partial<HousingBillDraft>) {
@@ -46,10 +48,10 @@ export function HousingBillAddDialog({
     <BubbleAddDialog
       open={open}
       onClose={onClose}
-      title="Добавить счёт"
+      title={t("housing.addDialog.title")}
       titleId="add-housing-title"
-      closeAriaLabel="Закрыть окно добавления счёта"
-      submitLabel="Добавить"
+      closeAriaLabel={t("housing.addDialog.closeAria")}
+      submitLabel={t("common.add")}
       onSubmit={handleSubmit}
       preview={<HousingBillCard {...preview} />}
     >

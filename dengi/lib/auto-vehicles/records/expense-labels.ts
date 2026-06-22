@@ -1,6 +1,10 @@
+import type { AppLang } from "@/lib/i18n/types";
+import { getAutoExpenseTypeLabel } from "@/lib/i18n/labels";
+import { translatePresetName } from "@/lib/i18n/presets";
 import type { AutoVehicleExpenseType, AutoVehicleRecord } from "./types";
 import type { CustomExpenseCategory } from "./custom-expense-categories";
 
+/** @deprecated Используйте getAutoExpenseTypeLabel(type, lang) */
 export const AUTO_VEHICLE_EXPENSE_LABELS: Record<AutoVehicleExpenseType, string> = {
   fuel: "Топливо",
   service: "Ремонт",
@@ -14,25 +18,26 @@ export const OTHER_EXPENSE_CATEGORY_ID = "other";
 
 export function resolveExpenseCategoryLabel(
   record: Pick<AutoVehicleRecord, "expenseType" | "customExpenseCategoryId">,
-  customCategories: CustomExpenseCategory[] = []
+  customCategories: CustomExpenseCategory[] = [],
+  lang: AppLang = "ru"
 ) {
   if (record.customExpenseCategoryId) {
     const custom = customCategories.find(
       (category) => category.id === record.customExpenseCategoryId
     );
 
-    return custom?.label ?? "Расход";
+    return custom?.label ?? translatePresetName("Расход", lang);
   }
 
   if (record.expenseType) {
-    return AUTO_VEHICLE_EXPENSE_LABELS[record.expenseType];
+    return getAutoExpenseTypeLabel(record.expenseType, lang);
   }
 
-  return "Расход";
+  return translatePresetName("Расход", lang);
 }
 
-export function listBuiltInExpenseCategoryOptions() {
-  return (Object.entries(AUTO_VEHICLE_EXPENSE_LABELS) as [AutoVehicleExpenseType, string][])
-    .filter(([id]) => id !== "other")
-    .map(([id, label]) => ({ id, label }));
+export function listBuiltInExpenseCategoryOptions(lang: AppLang = "ru") {
+  return (Object.keys(AUTO_VEHICLE_EXPENSE_LABELS) as AutoVehicleExpenseType[])
+    .filter((id) => id !== "other")
+    .map((id) => ({ id, label: getAutoExpenseTypeLabel(id, lang) }));
 }

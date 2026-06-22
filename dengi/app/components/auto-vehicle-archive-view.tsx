@@ -10,22 +10,24 @@ import { AutoVehiclePaymentsPanel } from "@/app/components/auto-vehicle-payments
 import { AutoVehicleSoldSummary } from "@/app/components/auto-vehicle-sold-summary";
 import { AutoVehicleStatsPanel } from "@/app/components/auto-vehicle-stats-panel";
 import { BubbleSegmentedControl } from "@/app/components/bubble-segmented-control";
+import { useLocale } from "@/app/components/locale-provider";
 import { buildVehicleDisplayHeading } from "@/lib/auto-vehicles";
 import { APP_PAGE_CLASS } from "@/lib/app-theme";
 import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
 
 type ArchiveTab = "stats" | "payments" | "expenses" | "info";
 
-const ARCHIVE_TABS: { id: ArchiveTab; label: string }[] = [
-  { id: "stats", label: "Статистика" },
-  { id: "payments", label: "Платежи" },
-  { id: "expenses", label: "Расходы" },
-  { id: "info", label: "Информация" },
-];
-
 export function AutoVehicleArchiveView({ vehicle }: { vehicle: AutoVehicle }) {
+  const { t } = useLocale();
   const [tab, setTab] = useState<ArchiveTab>("stats");
   const heading = buildVehicleDisplayHeading(vehicle.catalogId, vehicle.year);
+
+  const tabs: { id: ArchiveTab; label: string }[] = [
+    { id: "stats", label: t("auto.tabs.stats") },
+    { id: "payments", label: t("auto.tabs.payments") },
+    { id: "expenses", label: t("auto.tabs.expenses") },
+    { id: "info", label: t("auto.archive.tabInfo") },
+  ];
 
   return (
     <div className={APP_PAGE_CLASS}>
@@ -39,7 +41,7 @@ export function AutoVehicleArchiveView({ vehicle }: { vehicle: AutoVehicle }) {
             href="/auto/archive"
             className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
           >
-            Архив
+            {t("common.archive")}
           </Link>
           <div className="min-w-0 text-center">
             <p className="truncate text-sm font-semibold tracking-tight text-zinc-900">
@@ -53,7 +55,7 @@ export function AutoVehicleArchiveView({ vehicle }: { vehicle: AutoVehicle }) {
         </header>
 
         <p className="rounded-full bg-zinc-200/80 px-3 py-1 text-center text-[11px] font-semibold uppercase tracking-wide text-zinc-600">
-          Продано
+          {t("auto.archive.soldBadge")}
         </p>
 
         <AutoVehicleDetailHero vehicle={vehicle} compact={tab === "payments"} />
@@ -61,10 +63,10 @@ export function AutoVehicleArchiveView({ vehicle }: { vehicle: AutoVehicle }) {
         <AutoVehicleSoldSummary vehicle={vehicle} />
 
         <BubbleSegmentedControl
-          options={ARCHIVE_TABS}
+          options={tabs}
           value={tab}
           onChange={setTab}
-          ariaLabel="Разделы архива"
+          ariaLabel={t("auto.archive.tabsAria")}
         />
 
         {tab === "stats" ? (

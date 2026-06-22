@@ -1,5 +1,8 @@
+"use client";
+
 import { BubbleCard } from "@/app/components/bubble-card";
 import { UsdAmountInput } from "@/app/components/usd-amount";
+import { useLocale } from "@/app/components/locale-provider";
 import { APP_BUBBLE_INPUT } from "@/lib/app-theme";
 import type { HousingBill } from "@/lib/dashboard/housing-bills";
 import { toCreditCardNumber } from "@/app/components/credit-card-form-fields";
@@ -30,33 +33,35 @@ export function HousingBillFormFields({
   onPatch: (patch: Partial<HousingBill>) => void;
   readOnly?: boolean;
 }) {
+  const { t } = useLocale();
+
   return (
     <BubbleCard className="space-y-4 p-4">
-      <h2 className="text-sm font-semibold text-zinc-900">Счёт</h2>
+      <h2 className="text-sm font-semibold text-zinc-900">{t("housing.form.sectionTitle")}</h2>
 
-      <Field label="Название">
+      <Field label={t("common.name")}>
         <input
           className={inputClassName}
           value={draft.name}
           disabled={readOnly}
           onChange={(event) => onPatch({ name: event.target.value })}
-          placeholder="Ипотека"
+          placeholder={t("housing.form.namePlaceholder")}
           required
         />
       </Field>
 
-      <Field label="Срок оплаты">
+      <Field label={t("housing.form.dueDate")}>
         <input
           className={inputClassName}
           value={draft.date}
           disabled={readOnly}
           onChange={(event) => onPatch({ date: event.target.value })}
-          placeholder="1 июл"
+          placeholder={t("housing.form.dueDatePlaceholder")}
           required
         />
       </Field>
 
-      <Field label="Сумма">
+      <Field label={t("common.amount")}>
         <div className={`${inputClassName} flex items-center justify-start py-0 pl-3 pr-3`}>
           <UsdAmountInput
             value={draft.amount}

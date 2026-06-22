@@ -6,6 +6,7 @@ import { DebitCashAccountCard } from "@/app/components/debit-cash-account-card";
 import { DebitCashCategoryPicker } from "@/app/components/debit-cash-category-picker";
 import { DebitCashSimpleFormFields } from "@/app/components/debit-cash-simple-form-fields";
 import { DebitCryptoFormFields } from "@/app/components/debit-crypto-form-fields";
+import { useLocale } from "@/app/components/locale-provider";
 import {
   TransparentModalPanel,
   TransparentModalRoot,
@@ -18,7 +19,6 @@ import {
   createEmptyDebitBankDraft,
   createEmptyDebitCashDraft,
   createEmptyDebitCryptoDraft,
-  DEBIT_ACCOUNT_KIND_LABELS,
   toDebitCashAccountDraft,
   type DebitAccountKind,
   type DebitCashAccount,
@@ -45,35 +45,35 @@ function draftToPreview(draft: DebitCashAccountDraft): DebitCashAccount {
   });
 }
 
-function validateDraft(draft: DebitCashAccountDraft): string | null {
+function validateDraftKey(draft: DebitCashAccountDraft): string | null {
   const normalized = buildDebitAccountDraftForPersist(draft);
 
   if (draft.kind === "cash") {
-    return normalized.balance >= 0 ? null : "Укажите сумму.";
+    return normalized.balance >= 0 ? null : "debit.validation.enterAmount";
   }
 
   if (draft.kind === "crypto") {
     if (!normalized.name.trim()) {
-      return "Укажите название.";
+      return "debit.validation.enterName";
     }
 
     return null;
   }
 
   if (draft.incognito) {
-    return normalized.name.trim() ? null : "Укажите название счёта.";
+    return normalized.name.trim() ? null : "debit.validation.enterAccountName";
   }
 
   if (!draft.bankId) {
-    return "Выберите банк или включите инкогнито.";
+    return "debit.validation.selectBankOrIncognito";
   }
 
   if (isOtherBank(draft.bankId) && !draft.customBankName?.trim()) {
-    return "Укажите название банка.";
+    return "debit.validation.enterBankName";
   }
 
   if (!normalized.name.trim()) {
-    return "Укажите название счёта.";
+    return "debit.validation.enterAccountName";
   }
 
   return null;
@@ -88,6 +88,7 @@ export function DebitCashAddDialog({
   onClose: () => void;
   onAdd: (draft: DebitCashAccountDraft) => void;
 }) {
+  const { t } = useLocale();
   const [step, setStep] = useState<AddStep>("pick");
   const [draft, setDraft] = useState<DebitCashAccountDraft>(createEmptyDebitBankDraft());
   const [error, setError] = useState<string | null>(null);
@@ -113,9 +114,9 @@ export function DebitCashAddDialog({
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const issue = validateDraft(draft);
-    if (issue) {
-      setError(issue);
+    const issueKey = validateDraftKey(draft);
+    if (issueKey) {
+      setError(t(issueKey));
       return;
     }
 
@@ -126,18 +127,16 @@ export function DebitCashAddDialog({
   const preview = step === "pick" ? null : draftToPreview(draft);
   const title =
     step === "pick"
-      ? "Добавить в дебет"
+      ? t("debit.addDialog.titleDebit")
       : step === "bank"
-        ? "Банковский счёт"
-        : step === "cash"
-          ? "Наличные"
-          : "Криптовалюта";
+        ? t("debit.addDialog.titleBank")
+        : t(`debit.kind.${step}`);
 
   return (
     <TransparentModalRoot
       open={open}
       onClose={resetAndClose}
-      closeAriaLabel="Закрыть окно добавления"
+      closeAriaLabel={t("debit.addDialog.closeAria")}
       titleId="add-debit-title"
     >
       <TransparentModalPanel>
@@ -154,7 +153,7 @@ export function DebitCashAddDialog({
                     }}
                     className="shrink-0 rounded-full px-2 py-1 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-900"
                   >
-                    Назад
+                    {t("common.back")}
                   </button>
                 ) : null}
                 <h2 id="add-debit-title" className="truncate text-sm font-semibold tracking-tight text-zinc-900">
@@ -166,13 +165,13 @@ export function DebitCashAddDialog({
                 onClick={resetAndClose}
                 className="shrink-0 rounded-full px-2 py-1 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-900"
               >
-                Отмена
+                {t("common.cancel")}
               </button>
             </div>
 
             {step === "pick" ? (
               <p className="mt-3 text-xs leading-relaxed text-zinc-500">
-                Сначала выберите тип: банк, наличные или криптовалюта.
+                {t("debit.addDialog.selectTypeHint")}
               </p>
             ) : null}
 
@@ -185,10 +184,6 @@ export function DebitCashAddDialog({
 
           {step === "pick" ? (
             <div className="space-y-4 px-4 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-                {DEBIT_ACCOUNT_KIND_LABELS.bank} · {DEBIT_ACCOUNT_KIND_LABELS.cash} ·{" "}
-                {DEBIT_ACCOUNT_KIND_LABELS.crypto}
-              </p>
               <DebitCashCategoryPicker onSelect={pickCategory} />
             </div>
           ) : (
@@ -226,7 +221,7 @@ export function DebitCashAddDialog({
                 type="submit"
                 className="w-full rounded-full bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
               >
-                Добавить
+                {t("common.add")}
               </button>
             </form>
           )}

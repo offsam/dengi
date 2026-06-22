@@ -1,9 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
+import { useLocale } from "@/app/components/locale-provider";
 import type { PaymentYearRow } from "@/lib/auto-vehicles/records/payment-timeline";
 import { PAYMENT_AMOUNT_TEXT_COLOR } from "@/lib/auto-vehicles/payment-status-colors";
-
-const MONTH_LABELS = ["Я", "Ф", "М", "А", "М", "И", "И", "А", "С", "О", "Н", "Д"];
 
 /** +10% к прежним size-3 / size-4 / size-6 */
 const CHART_DOT_SIZE_PX = {
@@ -41,6 +41,18 @@ const CHART_DOT_TONE: Record<
       "border-white/80 bg-white/30 shadow-[0_2px_6px_-4px_rgba(90,80,65,0.14)] backdrop-blur-sm",
   },
 };
+
+function useMonthLabels(lang: "ru" | "en") {
+  return useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(lang === "en" ? "en-US" : "ru-RU", {
+      month: "narrow",
+    });
+
+    return Array.from({ length: 12 }, (_, monthIndex) =>
+      formatter.format(new Date(2024, monthIndex, 1))
+    );
+  }, [lang]);
+}
 
 /** Круглый пузырь в стиле приложения — стекло + лёгкий цветной тинт */
 function ChartBubbleDot({
@@ -125,10 +137,13 @@ function LegendDot({ status }: { status: Exclude<MonthDotStatus, "none"> }) {
 }
 
 export function AutoVehiclePaymentChart({ rows }: { rows: PaymentYearRow[] }) {
+  const { lang, t } = useLocale();
+  const monthLabels = useMonthLabels(lang);
+
   if (rows.length === 0) {
     return (
       <p className="rounded-2xl border border-dashed border-zinc-200 px-4 py-8 text-center text-sm text-zinc-500">
-        Нет графика платежей — укажите срок и сумму кредита в настройках авто.
+        {t("auto.paymentChart.empty")}
       </p>
     );
   }
@@ -138,7 +153,7 @@ export function AutoVehiclePaymentChart({ rows }: { rows: PaymentYearRow[] }) {
       <div className="flex items-end gap-1">
         <span className="w-8 shrink-0" aria-hidden />
         <div className="grid min-w-0 flex-1 grid-cols-12 gap-px">
-          {MONTH_LABELS.map((label, monthIndex) => (
+          {monthLabels.map((label, monthIndex) => (
             <span
               key={label + monthIndex}
               className="text-center font-semibold leading-none text-zinc-500"
@@ -153,7 +168,7 @@ export function AutoVehiclePaymentChart({ rows }: { rows: PaymentYearRow[] }) {
       {rows.map((row) => (
         <section
           key={row.year}
-          aria-label={`Платежи ${row.year} года`}
+          aria-label={t("auto.paymentChart.yearAria", { year: String(row.year) })}
           className="flex items-center gap-1"
         >
           <span className="w-8 shrink-0 text-right text-[11px] font-semibold tabular-nums leading-none text-zinc-600">
@@ -175,15 +190,19 @@ export function AutoVehiclePaymentChart({ rows }: { rows: PaymentYearRow[] }) {
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5 text-[10px] font-medium leading-none">
         <span className="inline-flex items-center gap-1.5">
           <LegendDot status="paid" />
-          <span style={{ color: CHART_DOT_TONE.paid.label }}>Оплачено</span>
+          <span style={{ color: CHART_DOT_TONE.paid.label }}>{t("auto.paymentChart.legendPaid")}</span>
         </span>
         <span className="inline-flex items-center gap-1.5">
           <LegendDot status="current" />
-          <span style={{ color: CHART_DOT_TONE.current.label }}>Текущий</span>
+          <span style={{ color: CHART_DOT_TONE.current.label }}>
+            {t("auto.paymentChart.legendCurrent")}
+          </span>
         </span>
         <span className="inline-flex items-center gap-1.5">
           <LegendDot status="upcoming" />
-          <span style={{ color: CHART_DOT_TONE.upcoming.label }}>Будущий</span>
+          <span style={{ color: CHART_DOT_TONE.upcoming.label }}>
+            {t("auto.paymentChart.legendUpcoming")}
+          </span>
         </span>
       </div>
     </div>

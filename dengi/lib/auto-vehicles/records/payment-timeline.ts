@@ -1,6 +1,9 @@
 import { addMonthsToIsoDate, resolveLoanFirstPaymentDate } from "../loan";
 import type { AutoVehicle } from "../vehicle";
 import type { AutoVehiclePaymentType, AutoVehicleRecord } from "./types";
+import { createTranslator } from "@/lib/i18n/translate";
+import type { AppLang } from "@/lib/i18n/types";
+import { translatePresetName } from "@/lib/i18n/presets";
 
 export type PaymentTimelineStatus = "paid" | "current" | "upcoming";
 
@@ -60,11 +63,13 @@ function buildLoanSchedule(vehicle: AutoVehicle) {
 export function buildAutoVehiclePaymentTimeline(
   vehicle: AutoVehicle,
   records: AutoVehicleRecord[],
-  asOf: Date = new Date()
+  asOf: Date = new Date(),
+  lang: AppLang = "ru"
 ): PaymentTimelineEntry[] {
   const payments = records.filter((record) => record.kind === "payment");
   const schedule = buildLoanSchedule(vehicle);
   const today = todayKey(asOf);
+  const monthlyPaymentLabel = translatePresetName("Ежемесячный платёж", lang);
 
   if (schedule.length === 0) {
     return payments
@@ -98,7 +103,7 @@ export function buildAutoVehiclePaymentTimeline(
       key: record?.id ?? `schedule-${slot.date}`,
       date: slot.date,
       amount: record?.amount ?? slot.amount,
-      description: record?.description ?? "Ежемесячный платёж",
+      description: record?.description ?? monthlyPaymentLabel,
       paymentType: "loan",
       status: "paid",
       record,
@@ -151,63 +156,110 @@ export function buildAutoVehiclePaymentTimeline(
   return timeline;
 }
 
-/** Сколько дней до даты платежа */
-export function formatDaysUntilPayment(dateIso: string, asOf: Date = new Date()) {
+function computeDaysUntilPayment(dateIso: string, asOf: Date = new Date()) {
   const today = new Date(asOf);
   today.setHours(12, 0, 0, 0);
   const target = new Date(`${dateIso}T12:00:00.000Z`);
-  const days = Math.ceil((target.getTime() - today.getTime()) / 86_400_000);
+  return Math.ceil((target.getTime() - today.getTime()) / 86_400_000);
+}
+
+function formatDaysUntilCount(days: number, lang: AppLang) {
+  const t = createTranslator(lang);
 
   if (days <= 0) {
-    return "Сегодня";
+    return t("auto.paymentTimeline.today");
   }
 
   if (days === 1) {
-    return "Завтра";
+    return t("auto.paymentTimeline.tomorrow");
+  }
+
+  if (lang === "en") {
+    return t("auto.paymentTimeline.inDays", { n: String(days) });
   }
 
   const mod10 = days % 10;
   const mod100 = days % 100;
-  let word = "дней";
 
   if (mod10 === 1 && mod100 !== 11) {
-    word = "день";
-  } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
-    word = "дня";
+    return t("auto.paymentTimeline.inDaysOne", { n: String(days) });
   }
 
-  return `Через ${days} ${word}`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
+    return t("auto.paymentTimeline.inDaysFew", { n: String(days) });
+  }
+
+  return t("auto.paymentTimeline.inDaysMany", { n: String(days) });
+}
+
+/** Сколько дней до даты платежа */
+export function formatDaysUntilPayment(
+  dateIso: string,
+  lang: AppLang = "ru",
+  asOf: Date = new Date()
+) {
+  return formatDaysUntilCount(computeDaysUntilPayment(dateIso, asOf), lang);
 }
 
 /** Подпись под остатком платежей в статистике */
-export function formatNextPaymentSubline(dateIso: string, asOf: Date = new Date()) {
-  const until = formatDaysUntilPayment(dateIso, asOf);
+export function formatNextPaymentSubline(
+  dateIso: string,
+  lang: AppLang = "ru",
+  asOf: Date = new Date()
+) {
+  const t = createTranslator(lang);
+  const days = computeDaysUntilPayment(dateIso, asOf);
 
-  if (until === "Сегодня") {
-    return "Следующий платёж сегодня";
+  if (days <= 0) {
+    return t("auto.paymentTimeline.nextToday");
   }
 
-  if (until === "Завтра") {
-    return "Следующий платёж завтра";
+  if (days === 1) {
+    return t("auto.paymentTimeline.nextTomorrow");
   }
 
-  const rest = until.charAt(0).toLowerCase() + until.slice(1);
-  return `Следующий платёж ${rest}`;
+  if (lang === "en") {
+    return t("auto.paymentTimeline.nextInDays", { n: String(days) });
+  }
+
+  const mod10 = days % 10;
+  const mod100 = days % 100;
+
+  if (mod10 === 1 && mod100 !== 11) {
+    return t("auto.paymentTimeline.nextInDaysOne", { n: String(days) });
+  }
+
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
+    return t("auto.paymentTimeline.nextInDaysFew", { n: String(days) });
+  }
+
+  return t("auto.paymentTimeline.nextInDays", { n: String(days) });
 }
 
 /** Короткая подпись: «Следующий через N дней» */
-export function formatNextPaymentShortSubline(dateIso: string, asOf: Date = new Date()) {
-  const until = formatDaysUntilPayment(dateIso, asOf);
+export function formatNextPaymentShortSubline(
+  dateIso: string,
+  lang: AppLang = "ru",
+  asOf: Date = new Date()
+) {
+  const t = createTranslator(lang);
+  const days = computeDaysUntilPayment(dateIso, asOf);
 
-  if (until === "Сегодня") {
-    return "Следующий сегодня";
+  if (days <= 0) {
+    return t("auto.paymentTimeline.nextTodayShort");
   }
 
-  if (until === "Завтра") {
-    return "Следующий завтра";
+  if (days === 1) {
+    return t("auto.paymentTimeline.nextTomorrowShort");
   }
 
+  const until = formatDaysUntilCount(days, lang);
   const rest = until.charAt(0).toLowerCase() + until.slice(1);
+
+  if (lang === "en") {
+    return `Next ${rest}`;
+  }
+
   return `Следующий ${rest}`;
 }
 

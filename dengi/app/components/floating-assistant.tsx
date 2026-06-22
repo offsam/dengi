@@ -52,13 +52,16 @@ export function FloatingAssistant() {
   const [input, setInput] = useState("");
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [messages, setMessages] = useState<AssistantMessage[]>([
-    createMessage(
-      "assistant",
-      "Примеры: «Потратил 50 на Sapphire», «Положил 200 на Discover», «Добавь карту Chase лимит 10000». Сначала правила (бесплатно), потом GPT-4o mini если не понял."
-    ),
+  const [messages, setMessages] = useState<AssistantMessage[]>(() => [
+    createMessage("assistant", t("assistant.welcome")),
   ]);
   const [pending, setPending] = useState<PendingConfirmation | null>(null);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setMessages([createMessage("assistant", t("assistant.welcome"))]);
+    });
+  }, [t]);
 
   const dragRef = useRef<{
     pointerId: number;
@@ -275,7 +278,7 @@ export function FloatingAssistant() {
       recorder.start();
       setRecording(true);
     } catch {
-      pushAssistant("Нет доступа к микрофону. Можно написать текстом.");
+      pushAssistant(t("assistant.micDenied"));
     }
   }
 
@@ -304,18 +307,18 @@ export function FloatingAssistant() {
       const payload = (await response.json()) as { text?: string; error?: string };
 
       if (!response.ok) {
-        pushAssistant(payload.error ?? "Не удалось распознать голос.");
+        pushAssistant(payload.error ?? t("assistant.speechError"));
         return;
       }
 
       if (!payload.text) {
-        pushAssistant("Ничего не расслышал. Попробуйте ещё раз.");
+        pushAssistant(t("assistant.speechEmpty"));
         return;
       }
 
       await handleUserText(payload.text);
     } catch {
-      pushAssistant("Голос не распознан. Попробуйте написать текстом.");
+      pushAssistant(t("assistant.speechFailed"));
     } finally {
       setBusy(false);
     }
@@ -340,7 +343,7 @@ export function FloatingAssistant() {
     return (
       <button
         type="button"
-        aria-label="Открыть помощника"
+        aria-label={t("assistant.openAria")}
         onClick={() => {
           setCollapsed(false);
           setOpen(true);
@@ -370,85 +373,83 @@ export function FloatingAssistant() {
           }}
         >
           <BubbleCard className="flex max-h-[min(24rem,70dvh)] flex-col overflow-hidden">
-          <div className="border-b border-white/40 px-4 py-3">
-            <p className="text-sm font-semibold text-zinc-900">{t("assistant.label")}</p>
-            <p className="mt-0.5 text-xs text-zinc-500">
-              Сначала правила, потом GPT-4o mini
-            </p>
-          </div>
+            <div className="border-b border-white/40 px-4 py-3">
+              <p className="text-sm font-semibold text-zinc-900">{t("assistant.label")}</p>
+              <p className="mt-0.5 text-xs text-zinc-500">{t("assistant.modelHint")}</p>
+            </div>
 
-          <div className="max-h-64 space-y-3 overflow-y-auto px-4 py-3">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`rounded-2xl px-3 py-2 text-sm ${
-                  message.role === "assistant"
-                    ? "bg-zinc-100 text-zinc-800"
-                    : "bg-zinc-900 text-white"
+            <div className="max-h-64 space-y-3 overflow-y-auto px-4 py-3">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`rounded-2xl px-3 py-2 text-sm ${
+                    message.role === "assistant"
+                      ? "bg-zinc-100 text-zinc-800"
+                      : "bg-zinc-900 text-white"
+                  }`}
+                >
+                  {message.text}
+                </div>
+              ))}
+            </div>
+
+            {pending ? (
+              <div className="flex gap-2 border-t border-zinc-100 px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => void handleUserText("yes")}
+                  className="flex-1 rounded-full bg-zinc-900 px-3 py-2 text-xs font-semibold text-white"
+                >
+                  {t("common.yes")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleUserText("no")}
+                  className="flex-1 rounded-full border border-zinc-200 px-3 py-2 text-xs font-semibold text-zinc-700"
+                >
+                  {t("common.no")}
+                </button>
+              </div>
+            ) : null}
+
+            <form
+              className="flex items-center gap-2 border-t border-zinc-100 px-3 py-3"
+              onSubmit={submitText}
+            >
+              <input
+                className="min-w-0 flex-1 rounded-full border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-zinc-400"
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                placeholder={t("assistant.inputPlaceholder")}
+                disabled={busy}
+              />
+              <button
+                type="button"
+                onClick={recording ? stopRecording : startRecording}
+                disabled={busy}
+                className={`rounded-full px-3 py-2 text-xs font-semibold ${
+                  recording
+                    ? "bg-rose-600 text-white"
+                    : "border border-zinc-200 text-zinc-700"
                 }`}
               >
-                {message.text}
-              </div>
-            ))}
-          </div>
-
-          {pending ? (
-            <div className="flex gap-2 border-t border-zinc-100 px-4 py-3">
-              <button
-                type="button"
-                onClick={() => void handleUserText("yes")}
-                className="flex-1 rounded-full bg-zinc-900 px-3 py-2 text-xs font-semibold text-white"
-              >
-                Да
+                {recording ? t("assistant.stopRecording") : t("assistant.startRecording")}
               </button>
               <button
-                type="button"
-                onClick={() => void handleUserText("no")}
-                className="flex-1 rounded-full border border-zinc-200 px-3 py-2 text-xs font-semibold text-zinc-700"
+                type="submit"
+                disabled={busy || !input.trim()}
+                className="rounded-full bg-zinc-900 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
               >
-                Нет
+                {t("assistant.send")}
               </button>
-            </div>
-          ) : null}
-
-          <form
-            className="flex items-center gap-2 border-t border-zinc-100 px-3 py-3"
-            onSubmit={submitText}
-          >
-            <input
-              className="min-w-0 flex-1 rounded-full border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-zinc-400"
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              placeholder="Потратил 50 на Sapphire..."
-              disabled={busy}
-            />
-            <button
-              type="button"
-              onClick={recording ? stopRecording : startRecording}
-              disabled={busy}
-              className={`rounded-full px-3 py-2 text-xs font-semibold ${
-                recording
-                  ? "bg-rose-600 text-white"
-                  : "border border-zinc-200 text-zinc-700"
-              }`}
-            >
-              {recording ? "Стоп" : "Голос"}
-            </button>
-            <button
-              type="submit"
-              disabled={busy || !input.trim()}
-              className="rounded-full bg-zinc-900 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
-            >
-              Отправить
-            </button>
-          </form>
+            </form>
           </BubbleCard>
         </div>
       ) : null}
 
       <button
         type="button"
-        aria-label={t("assistant.label")}
+        aria-label={t("assistant.openAria")}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

@@ -1,12 +1,9 @@
+"use client";
+
 import { BubbleSegmentedControl } from "@/app/components/bubble-segmented-control";
+import { useLocale } from "@/app/components/locale-provider";
 
 export type DebitCashDetailTab = "overview" | "activity" | "settings";
-
-const TABS: { id: DebitCashDetailTab; label: string }[] = [
-  { id: "overview", label: "Обзор" },
-  { id: "activity", label: "Операции" },
-  { id: "settings", label: "Настройки" },
-];
 
 export function DebitCashDetailTabs({
   active,
@@ -15,12 +12,19 @@ export function DebitCashDetailTabs({
   active: DebitCashDetailTab;
   onChange: (tab: DebitCashDetailTab) => void;
 }) {
+  const { t } = useLocale();
+  const tabs: { id: DebitCashDetailTab; label: string }[] = [
+    { id: "overview", label: t("debit.tabs.overview") },
+    { id: "activity", label: t("debit.tabs.activity") },
+    { id: "settings", label: t("credit.tabs.settings") },
+  ];
+
   return (
     <BubbleSegmentedControl
-      options={TABS}
+      options={tabs}
       value={active}
       onChange={onChange}
-      ariaLabel="Разделы счёта"
+      ariaLabel={t("debit.tabs.ariaLabel")}
     />
   );
 }

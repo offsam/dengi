@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AutoVehicleDetailHero } from "@/app/components/auto-vehicle-detail-hero";
 import { AutoVehicleFormFields } from "@/app/components/auto-vehicle-form-fields";
 import { BubbleAddDialog } from "@/app/components/bubble-add-dialog";
+import { useLocale } from "@/app/components/locale-provider";
 import {
   createEmptyAutoVehicleDraft,
   toAutoVehicleDraft,
@@ -19,6 +20,7 @@ export function AutoVehicleAddDialog({
   onClose: () => void;
   onAdd: (draft: AutoVehicleDraft) => void;
 }) {
+  const { t } = useLocale();
   const [draft, setDraft] = useState<AutoVehicle>(() => ({
     ...createEmptyAutoVehicleDraft(),
     id: "preview",
@@ -38,10 +40,10 @@ export function AutoVehicleAddDialog({
     <BubbleAddDialog
       open={open}
       onClose={onClose}
-      title="Добавить автомобиль"
+      title={t("auto.addDialog.title")}
       titleId="add-auto-title"
-      closeAriaLabel="Закрыть окно добавления автомобиля"
-      submitLabel="Добавить автомобиль"
+      closeAriaLabel={t("auto.addDialog.closeAria")}
+      submitLabel={t("auto.addDialog.submit")}
       onSubmit={handleSubmit}
       preview={<AutoVehicleDetailHero vehicle={draft} compact />}
     >

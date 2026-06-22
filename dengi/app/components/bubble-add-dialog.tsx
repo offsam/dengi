@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { APP_MODAL_HEADER } from "@/lib/app-theme";
+import { useLocale } from "@/app/components/locale-provider";
 import {
   TransparentModalPanel,
   TransparentModalRoot,
@@ -30,6 +31,8 @@ export function BubbleAddDialog({
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   children: ReactNode;
 }) {
+  const { t } = useLocale();
+
   return (
     <TransparentModalRoot
       open={open}
@@ -49,7 +52,7 @@ export function BubbleAddDialog({
                 onClick={onClose}
                 className="rounded-full px-2 py-1 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-900"
               >
-                Отмена
+                {t("common.cancel")}
               </button>
             </div>
 

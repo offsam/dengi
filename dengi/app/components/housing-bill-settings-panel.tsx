@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { HousingBillFormFields } from "@/app/components/housing-bill-form-fields";
+import { useLocale } from "@/app/components/locale-provider";
 import type { HousingBill } from "@/lib/dashboard/housing-bills";
 
 type PanelMode = "view" | "edit" | "saved";
@@ -15,6 +16,7 @@ export function HousingBillSettingsPanel({
   onSave: (next: HousingBill) => void;
   onDelete: () => void;
 }) {
+  const { t } = useLocale();
   const [mode, setMode] = useState<PanelMode>("view");
   const [draft, setDraft] = useState(bill);
 
@@ -67,14 +69,14 @@ export function HousingBillSettingsPanel({
             className="shrink-0 py-3 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900"
             onClick={cancelEditing}
           >
-            Отмена
+            {t("common.cancel")}
           </button>
           <button
             type="button"
             className="flex-1 rounded-full bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
             onClick={saveEditing}
           >
-            Сохранить
+            {t("common.save")}
           </button>
         </div>
       ) : saved ? (
@@ -83,7 +85,7 @@ export function HousingBillSettingsPanel({
           className="w-full rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white"
           disabled
         >
-          Сохранено
+          {t("common.saved")}
         </button>
       ) : (
         <div className="space-y-2 pt-1">
@@ -92,14 +94,14 @@ export function HousingBillSettingsPanel({
             className="w-full rounded-full border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition-colors hover:border-zinc-300 hover:bg-zinc-50"
             onClick={() => setMode("edit")}
           >
-            Редактировать
+            {t("common.edit")}
           </button>
           <button
             type="button"
             className="w-full py-2 text-sm font-medium text-rose-600 transition-colors hover:text-rose-700"
             onClick={onDelete}
           >
-            Удалить счёт
+            {t("housing.settings.delete")}
           </button>
         </div>
       )}

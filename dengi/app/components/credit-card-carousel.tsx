@@ -4,6 +4,7 @@ import Link from "next/link";
 import { HorizontalWheelScroll } from "@/app/components/horizontal-wheel-scroll";
 import { HorizontalReorderButtons } from "@/app/components/reorder-controls";
 import { CreditCardTile, type CreditCardTileDensity } from "@/app/components/credit-card-tile";
+import { useLocale } from "@/app/components/locale-provider";
 import type { CreditCard } from "@/lib/credit-cards/types";
 
 const COMPACT_ROW_CLASSNAME =
@@ -32,6 +33,7 @@ function CreditCardItem({
   total: number;
   onMoveItem?: (id: string, direction: -1 | 1) => void;
 }) {
+  const { t } = useLocale();
   const tile = <CreditCardTile {...card} density={density} />;
 
   if (!editOrder) {
@@ -39,7 +41,7 @@ function CreditCardItem({
       <Link
         href={`/cards/${card.id}`}
         className="block shrink-0 rounded-lg transition-transform active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
-        aria-label={`Открыть ${card.name}`}
+        aria-label={t("common.openItem", { name: card.name })}
       >
         {tile}
       </Link>
@@ -70,13 +72,14 @@ export function CreditCardCarousel({
   editOrder?: boolean;
   onMoveItem?: (id: string, direction: -1 | 1) => void;
 }) {
+  const { t } = useLocale();
   const total = cards.length;
 
   if (density === "minimal") {
     const [topRow, bottomRow] = splitCardsIntoTwoRows(cards);
 
     return (
-      <div className="space-y-1.5" aria-label="Кредитные карты">
+      <div className="space-y-1.5" aria-label={t("breakdownGroups.creditCards")}>
         <HorizontalWheelScroll className={COMPACT_ROW_CLASSNAME}>
           {topRow.map((card, index) => (
             <CreditCardItem
@@ -112,7 +115,7 @@ export function CreditCardCarousel({
   return (
     <HorizontalWheelScroll
       className={FULL_ROW_CLASSNAME}
-      ariaLabel="Кредитные карты"
+      ariaLabel={t("breakdownGroups.creditCards")}
     >
       {cards.map((card, index) => (
         <CreditCardItem

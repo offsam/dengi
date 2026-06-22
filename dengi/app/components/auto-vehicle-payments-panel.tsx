@@ -14,13 +14,10 @@ import {
 } from "@/lib/auto-vehicles/records/payment-timeline";
 import { syncAutoVehicleLoanPayments } from "@/lib/auto-vehicles/records/sync-loan-payments";
 import { APP_BUBBLE_BUTTON, APP_BUBBLE_INPUT } from "@/lib/app-theme";
+import { useLocale } from "@/app/components/locale-provider";
 import type { AutoVehiclePaymentType, AutoVehicleRecord } from "@/lib/auto-vehicles/records/types";
 
-const PAYMENT_LABELS: Record<AutoVehiclePaymentType, string> = {
-  loan: "Кредит",
-  extra: "Досрочный",
-  insurance: "Страховка",
-};
+const PAYMENT_TYPES: AutoVehiclePaymentType[] = ["loan", "extra", "insurance"];
 
 const inputClassName = APP_BUBBLE_INPUT;
 
@@ -43,6 +40,7 @@ function PaymentEditForm({
     occurredAt: string;
   }) => void;
 }) {
+  const { lang, t } = useLocale();
   const [amount, setAmount] = useState(String(record.amount));
   const [description, setDescription] = useState(record.description);
   const [date, setDate] = useState(toDateInputValue(record.occurredAt));
@@ -67,7 +65,7 @@ function PaymentEditForm({
       <BubbleCard className="mx-1 space-y-3 p-3">
       <div className="grid grid-cols-2 gap-3">
         <label className="block space-y-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">Сумма</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">{t("common.amount")}</span>
           <input
             type="number"
             className={inputClassName}
@@ -80,7 +78,7 @@ function PaymentEditForm({
         </label>
 
         <label className="block space-y-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">Дата</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">{t("common.date")}</span>
           <input
             type="date"
             className={inputClassName}
@@ -92,7 +90,7 @@ function PaymentEditForm({
       </div>
 
       <label className="block space-y-1.5">
-        <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">Описание</span>
+        <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">{t("common.description")}</span>
         <input
           className={inputClassName}
           value={description}
@@ -102,6 +100,10 @@ function PaymentEditForm({
       </BubbleCard>
     </form>
   );
+}
+
+function paymentTypeLabel(type: AutoVehiclePaymentType, t: (k: string) => string) {
+  return t(`auto.paymentType.${type}`);
 }
 
 export function AutoVehiclePaymentsPanel({
@@ -115,6 +117,7 @@ export function AutoVehiclePaymentsPanel({
   expanded?: boolean;
   onHeroCompress?: (compress: number) => void;
 }) {
+  const { lang, t } = useLocale();
   const mounted = useClientMounted();
   const { getVehicle } = useAutoVehicles();
   const vehicle = getVehicle(vehicleId);
@@ -140,8 +143,8 @@ export function AutoVehiclePaymentsPanel({
       return [];
     }
 
-    return buildAutoVehiclePaymentTimeline(vehicle, records);
-  }, [vehicle, records]);
+    return buildAutoVehiclePaymentTimeline(vehicle, records, new Date(), lang);
+  }, [vehicle, records, lang]);
 
   const chartRows = useMemo(() => {
     if (!vehicle) {
@@ -163,7 +166,7 @@ export function AutoVehiclePaymentsPanel({
       kind: "payment",
       paymentType,
       amount: parsedAmount,
-      description: description.trim() || PAYMENT_LABELS[paymentType],
+      description: description.trim() || paymentTypeLabel(paymentType, t),
       occurredAt: new Date(`${date}T12:00:00.000Z`).toISOString(),
     });
 
@@ -186,7 +189,7 @@ export function AutoVehiclePaymentsPanel({
   return (
     <div className={`flex min-h-0 flex-col gap-3 ${expanded ? "flex-1" : ""}`}>
       <div className="flex shrink-0 items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-zinc-900">Платежи по кредиту</p>
+        <p className="text-sm font-semibold text-zinc-900">{t("auto.payments.title")}</p>
         {readOnly ? null : (
           <div className="flex shrink-0 items-center gap-2">
             <button
@@ -210,10 +213,10 @@ export function AutoVehiclePaymentsPanel({
                 <circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none" />
                 <circle cx="13" cy="8" r="1.5" fill="currentColor" stroke="none" />
               </svg>
-              {chartOpen ? "Список" : "График"}
+              {chartOpen ? t("auto.payments.viewList") : t("auto.payments.viewChart")}
             </button>
             <BubbleAddButton
-              ariaLabel={addOpen ? "Закрыть форму добавления" : "Добавить платёж"}
+              ariaLabel={addOpen ? t("auto.payments.closeFormAria") : t("auto.payments.addAria")}
               active={addOpen}
               onClick={() => {
                 setAddOpen((current) => !current);
@@ -228,7 +231,7 @@ export function AutoVehiclePaymentsPanel({
         <form onSubmit={handleAdd}>
           <BubbleCard className="shrink-0 space-y-3 p-4">
           <label className="block space-y-1.5">
-            <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">Тип</span>
+            <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">{t("common.type")}</span>
             <select
               className={inputClassName}
               value={paymentType}
@@ -236,9 +239,9 @@ export function AutoVehiclePaymentsPanel({
                 setPaymentType(event.target.value as AutoVehiclePaymentType)
               }
             >
-              {Object.entries(PAYMENT_LABELS).map(([value, label]) => (
+              {PAYMENT_TYPES.map((value) => (
                 <option key={value} value={value}>
-                  {label}
+                  {paymentTypeLabel(value, t)}
                 </option>
               ))}
             </select>
@@ -247,7 +250,7 @@ export function AutoVehiclePaymentsPanel({
           <div className="grid grid-cols-2 gap-3">
             <label className="block space-y-1.5">
               <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                Сумма
+                {t("common.amount")}
               </span>
               <input
                 type="number"
@@ -262,7 +265,7 @@ export function AutoVehiclePaymentsPanel({
 
             <label className="block space-y-1.5">
               <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                Дата
+                {t("common.date")}
               </span>
               <input
                 type="date"
@@ -276,13 +279,13 @@ export function AutoVehiclePaymentsPanel({
 
           <label className="block space-y-1.5">
             <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-              Описание
+              {t("common.description")}
             </span>
             <input
               className={inputClassName}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="Необязательно"
+              placeholder={t("common.optional")}
             />
           </label>
 
@@ -290,7 +293,7 @@ export function AutoVehiclePaymentsPanel({
             type="submit"
             className="w-full rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
           >
-            Добавить платёж
+            {t("auto.payments.submit")}
           </button>
           </BubbleCard>
         </form>

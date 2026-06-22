@@ -14,12 +14,14 @@ import {
 } from "@/app/components/debit-cash-detail-tabs";
 import { DebitCashSettingsPanel } from "@/app/components/debit-cash-settings-panel";
 import { SimpleDeleteDialog } from "@/app/components/simple-delete-dialog";
+import { useLocale } from "@/app/components/locale-provider";
 import { useClientMounted } from "@/app/hooks/use-client-mounted";
 import { useDebitCashAccounts } from "@/app/hooks/use-debit-cash-accounts";
 import { APP_PAGE_CLASS } from "@/lib/app-theme";
 import type { DebitCashAccount } from "@/lib/dashboard/debit-accounts";
 
 function DebitCashDetailContent({ account }: { account: DebitCashAccount }) {
+  const { t } = useLocale();
   const router = useRouter();
   const { updateAccount, deleteAccount } = useDebitCashAccounts();
   const [tab, setTab] = useState<DebitCashDetailTab>("overview");
@@ -33,7 +35,7 @@ function DebitCashDetailContent({ account }: { account: DebitCashAccount }) {
             href="/"
             className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
           >
-            Назад
+            {t("common.back")}
           </Link>
           <h1 className="truncate text-sm font-semibold tracking-tight">{account.name}</h1>
           <span className="w-10" aria-hidden />
@@ -57,8 +59,8 @@ function DebitCashDetailContent({ account }: { account: DebitCashAccount }) {
 
       <SimpleDeleteDialog
         open={deleteOpen}
-        title="Удалить счёт?"
-        description={`«${account.name}» исчезнет с главного экрана. Это черновой сценарий — историю операций пока не храним.`}
+        title={t("debit.deleteDialog.title")}
+        description={t("debit.deleteDialog.description", { name: account.name })}
         onClose={() => setDeleteOpen(false)}
         onConfirm={() => {
           setDeleteOpen(false);
@@ -71,6 +73,7 @@ function DebitCashDetailContent({ account }: { account: DebitCashAccount }) {
 }
 
 export function DebitCashSettingsView({ accountId }: { accountId: string }) {
+  const { t } = useLocale();
   const mounted = useClientMounted();
   const { getAccount } = useDebitCashAccounts();
   const account = mounted ? getAccount(accountId) : null;
@@ -94,9 +97,9 @@ export function DebitCashSettingsView({ accountId }: { accountId: string }) {
           href="/"
           className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
         >
-          На главную
+          {t("common.goHome")}
         </Link>
-        <p className="text-sm text-zinc-600">Счёт не найден.</p>
+        <p className="text-sm text-zinc-600">{t("debit.notFound")}</p>
       </div>
     );
   }

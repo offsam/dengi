@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import { BubbleSegmentedControl } from "@/app/components/bubble-segmented-control";
 import { ReadonlyFormValue } from "@/app/components/editable-form-value";
+import { useLocale } from "@/app/components/locale-provider";
 import { FormRowEnd, UsdAmount, UsdAmountInput } from "@/app/components/usd-amount";
 import { APP_BUBBLE_INSET_CONTROL } from "@/lib/app-theme";
 import { useCreditCards } from "@/app/hooks/use-credit-cards";
@@ -23,30 +25,6 @@ import {
   formatDebitCashAccountLabel,
 } from "@/lib/dashboard/debit-accounts";
 import { toAutoVehicleNumber } from "@/lib/auto-vehicles/form-utils";
-
-const CASH_METHOD_OPTIONS: { id: AutoVehicleCashMethod; label: string }[] = [
-  { id: "wallet", label: "Кошелёк" },
-  { id: "credit_card", label: "Карта" },
-  { id: "trade", label: "Трейд" },
-];
-
-const CASH_METHOD_LABELS: Record<AutoVehicleCashMethod, string> = {
-  wallet: "Кошелёк",
-  credit_card: "Карта",
-  trade: "Трейд",
-};
-
-const TRADE_PART_LABELS: Record<AutoVehicleTradePart, string> = {
-  cash: "Наличные",
-  vehicle: "Другая машина",
-  wallet: "Кошелёк",
-};
-
-const TRADE_PART_OPTIONS: { id: AutoVehicleTradePart; label: string }[] = [
-  { id: "cash", label: TRADE_PART_LABELS.cash },
-  { id: "vehicle", label: TRADE_PART_LABELS.vehicle },
-  { id: "wallet", label: TRADE_PART_LABELS.wallet },
-];
 
 const fieldClassName =
   "w-full min-w-0 border-0 bg-transparent py-0 text-right text-[15px] leading-none text-zinc-900 outline-none ring-0 placeholder:text-zinc-300 focus:ring-0 tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
@@ -87,8 +65,47 @@ export function AutoVehicleCashFundingFields({
   onPatch: (patch: AutoVehicleCashFunding) => void;
   readOnly?: boolean;
 }) {
+  const { lang, t } = useLocale();
   const { cards } = useCreditCards();
   const state = normalizeCashFunding(funding);
+
+  const cashMethodOptions = useMemo(
+    (): { id: AutoVehicleCashMethod; label: string }[] => [
+      { id: "wallet", label: t("auto.cashFunding.wallet") },
+      { id: "credit_card", label: t("auto.cashFunding.creditCard") },
+      { id: "trade", label: t("auto.cashFunding.trade") },
+    ],
+    [t]
+  );
+
+  const cashMethodLabels = useMemo(
+    (): Record<AutoVehicleCashMethod, string> => ({
+      wallet: t("auto.cashFunding.wallet"),
+      credit_card: t("auto.cashFunding.creditCard"),
+      trade: t("auto.cashFunding.trade"),
+    }),
+    [t]
+  );
+
+  const tradePartLabels = useMemo(
+    (): Record<AutoVehicleTradePart, string> => ({
+      cash: t("auto.cashFunding.tradeCash"),
+      vehicle: t("auto.cashFunding.tradeVehicle"),
+      wallet: t("auto.cashFunding.wallet"),
+    }),
+    [t]
+  );
+
+  const tradePartOptions = useMemo(
+    (): { id: AutoVehicleTradePart; label: string }[] => [
+      { id: "cash", label: tradePartLabels.cash },
+      { id: "vehicle", label: tradePartLabels.vehicle },
+      { id: "wallet", label: tradePartLabels.wallet },
+    ],
+    [tradePartLabels]
+  );
+
+  const paymentSourceLabel = t("auto.cashFunding.paymentSource");
 
   function replaceFunding(next: AutoVehicleCashFunding) {
     onPatch(normalizeCashFunding(next));
@@ -131,7 +148,7 @@ export function AutoVehicleCashFundingFields({
     ? tradeEntry.trim
       ? `${tradeEntry.model} ${tradeEntry.trim}`
       : tradeEntry.model
-    : "—";
+    : t("common.dash");
   const walletAccount = DEBIT_CASH_ACCOUNTS.find((account) => account.id === state.walletId);
   const tradeWalletAccount = DEBIT_CASH_ACCOUNTS.find(
     (account) => account.id === state.tradeWalletId
@@ -141,34 +158,34 @@ export function AutoVehicleCashFundingFields({
   if (readOnly) {
     return (
       <>
-        <EditRow label="Источник оплаты">
-          <InfoValue>{CASH_METHOD_LABELS[state.method]}</InfoValue>
+        <EditRow label={paymentSourceLabel}>
+          <InfoValue>{cashMethodLabels[state.method]}</InfoValue>
         </EditRow>
 
         {state.method === "wallet" ? (
-          <EditRow label="Счёт или кошелёк">
+          <EditRow label={t("auto.cashFunding.accountOrWallet")}>
             <InfoValue>
-              {walletAccount ? formatDebitCashAccountLabel(walletAccount) : "—"}
+              {walletAccount ? formatDebitCashAccountLabel(walletAccount, lang) : t("common.dash")}
             </InfoValue>
           </EditRow>
         ) : null}
 
         {state.method === "credit_card" ? (
-          <EditRow label="Кредитная карта">
+          <EditRow label={t("auto.cashFunding.creditCardLabel")}>
             <InfoValue>
-              {creditCard ? `${getCreditCardBankName(creditCard)} · ${creditCard.name}` : "—"}
+              {creditCard ? `${getCreditCardBankName(creditCard)} · ${creditCard.name}` : t("common.dash")}
             </InfoValue>
           </EditRow>
         ) : null}
 
         {state.method === "trade" ? (
           <>
-            <EditRow label="Часть трейда">
-              <InfoValue>{TRADE_PART_LABELS[state.tradePart ?? "cash"]}</InfoValue>
+            <EditRow label={t("auto.cashFunding.tradePart")}>
+              <InfoValue>{tradePartLabels[state.tradePart ?? "cash"]}</InfoValue>
             </EditRow>
 
             {state.tradePart === "cash" ? (
-              <EditRow label="Сумма наличными">
+              <EditRow label={t("auto.cashFunding.cashAmount")}>
                 <ReadonlyFormValue>
                   <UsdAmount amount={state.tradeCashAmount ?? 0} />
                 </ReadonlyFormValue>
@@ -177,16 +194,16 @@ export function AutoVehicleCashFundingFields({
 
             {state.tradePart === "vehicle" ? (
               <>
-                <EditRow label="Марка">
+                <EditRow label={t("auto.form.make")}>
                   <InfoValue>{tradeMake}</InfoValue>
                 </EditRow>
-                <EditRow label="Модель">
+                <EditRow label={t("auto.form.model")}>
                   <InfoValue>{tradeModelLabel}</InfoValue>
                 </EditRow>
-                <EditRow label="Год">
-                  <InfoValue>{state.tradeVehicleYear ?? "—"}</InfoValue>
+                <EditRow label={t("auto.form.year")}>
+                  <InfoValue>{state.tradeVehicleYear ?? t("common.dash")}</InfoValue>
                 </EditRow>
-                <EditRow label="Оценка стоимости">
+                <EditRow label={t("auto.cashFunding.valueEstimate")}>
                   <ReadonlyFormValue>
                     <UsdAmount amount={state.tradeVehicleValue ?? 0} />
                   </ReadonlyFormValue>
@@ -196,14 +213,14 @@ export function AutoVehicleCashFundingFields({
 
             {state.tradePart === "wallet" ? (
               <>
-                <EditRow label="Кошелёк">
+                <EditRow label={t("auto.cashFunding.wallet")}>
                   <InfoValue>
                     {tradeWalletAccount
-                      ? formatDebitCashAccountLabel(tradeWalletAccount)
-                      : "—"}
+                      ? formatDebitCashAccountLabel(tradeWalletAccount, lang)
+                      : t("common.dash")}
                   </InfoValue>
                 </EditRow>
-                <EditRow label="Остаток доплатой">
+                <EditRow label={t("auto.cashFunding.remainderPayment")}>
                   <ReadonlyFormValue>
                     <UsdAmount amount={state.tradeWalletAmount ?? 0} />
                   </ReadonlyFormValue>
@@ -218,17 +235,17 @@ export function AutoVehicleCashFundingFields({
 
   return (
     <div className="space-y-2 border-b border-zinc-100 px-4 py-3">
-      <p className="text-[13px] text-zinc-900">Источник оплаты</p>
+      <p className="text-[13px] text-zinc-900">{paymentSourceLabel}</p>
       <BubbleSegmentedControl
-        options={CASH_METHOD_OPTIONS}
+        options={cashMethodOptions}
         value={state.method}
         onChange={patchMethod}
-        ariaLabel="Источник оплаты"
+        ariaLabel={paymentSourceLabel}
       />
 
       <div className="-mx-4 overflow-hidden border-t border-zinc-100">
         {state.method === "wallet" ? (
-          <EditRow label="Счёт или кошелёк">
+          <EditRow label={t("auto.cashFunding.accountOrWallet")}>
             <select
               className={editableSelectClassName}
               value={state.walletId ?? "dc-3"}
@@ -238,7 +255,7 @@ export function AutoVehicleCashFundingFields({
             >
               {DEBIT_CASH_ACCOUNTS.map((account) => (
                 <option key={account.id} value={account.id}>
-                  {formatDebitCashAccountLabel(account)}
+                  {formatDebitCashAccountLabel(account, lang)}
                 </option>
               ))}
             </select>
@@ -246,7 +263,7 @@ export function AutoVehicleCashFundingFields({
         ) : null}
 
         {state.method === "credit_card" ? (
-          <EditRow label="Кредитная карта">
+          <EditRow label={t("auto.cashFunding.creditCardLabel")}>
             <select
               className={editableSelectClassName}
               value={state.creditCardId ?? cards[0]?.id ?? ""}
@@ -258,7 +275,7 @@ export function AutoVehicleCashFundingFields({
               }
             >
               {cards.length === 0 ? (
-                <option value="">Нет карт</option>
+                <option value="">{t("auto.cashFunding.noCards")}</option>
               ) : (
                 cards.map((card) => (
                   <option key={card.id} value={card.id}>
@@ -274,7 +291,7 @@ export function AutoVehicleCashFundingFields({
           <div className="space-y-2 px-0 py-2.5">
             <div className="px-4">
               <BubbleSegmentedControl
-                options={TRADE_PART_OPTIONS}
+                options={tradePartOptions}
                 value={state.tradePart ?? "cash"}
                 onChange={(tradePart) =>
                   replaceFunding({
@@ -283,12 +300,12 @@ export function AutoVehicleCashFundingFields({
                     tradePart,
                   })
                 }
-                ariaLabel="Часть трейда"
+                ariaLabel={t("auto.cashFunding.tradePart")}
               />
             </div>
 
             {state.tradePart === "cash" ? (
-              <EditRow label="Сумма наличными">
+              <EditRow label={t("auto.cashFunding.cashAmount")}>
                 <FormRowEnd>
                   <span className={APP_BUBBLE_INSET_CONTROL}>
                     <UsdAmountInput
@@ -309,7 +326,7 @@ export function AutoVehicleCashFundingFields({
 
             {state.tradePart === "vehicle" ? (
               <>
-                <EditRow label="Марка">
+                <EditRow label={t("auto.form.make")}>
                   <select
                     className={editableSelectClassName}
                     value={tradeMake}
@@ -331,7 +348,7 @@ export function AutoVehicleCashFundingFields({
                   </select>
                 </EditRow>
 
-                <EditRow label="Модель">
+                <EditRow label={t("auto.form.model")}>
                   <select
                     className={editableSelectClassName}
                     value={resolvedTradeCatalogId}
@@ -352,7 +369,7 @@ export function AutoVehicleCashFundingFields({
                   </select>
                 </EditRow>
 
-                <EditRow label="Год">
+                <EditRow label={t("auto.form.year")}>
                   <FormRowEnd>
                     <input
                       type="number"
@@ -375,7 +392,7 @@ export function AutoVehicleCashFundingFields({
                   </FormRowEnd>
                 </EditRow>
 
-                <EditRow label="Оценка стоимости">
+                <EditRow label={t("auto.cashFunding.valueEstimate")}>
                   <FormRowEnd>
                     <span className={APP_BUBBLE_INSET_CONTROL}>
                       <UsdAmountInput
@@ -397,7 +414,7 @@ export function AutoVehicleCashFundingFields({
 
             {state.tradePart === "wallet" ? (
               <>
-                <EditRow label="Кошелёк">
+                <EditRow label={t("auto.cashFunding.wallet")}>
                   <select
                     className={editableSelectClassName}
                     value={state.tradeWalletId ?? "dc-3"}
@@ -412,13 +429,13 @@ export function AutoVehicleCashFundingFields({
                   >
                     {DEBIT_CASH_ACCOUNTS.map((account) => (
                       <option key={account.id} value={account.id}>
-                        {formatDebitCashAccountLabel(account)}
+                        {formatDebitCashAccountLabel(account, lang)}
                       </option>
                     ))}
                   </select>
                 </EditRow>
 
-                <EditRow label="Остаток доплатой">
+                <EditRow label={t("auto.cashFunding.remainderPayment")}>
                   <FormRowEnd>
                     <span className={APP_BUBBLE_INSET_CONTROL}>
                       <UsdAmountInput

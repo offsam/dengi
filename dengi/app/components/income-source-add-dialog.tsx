@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BubbleAddDialog } from "@/app/components/bubble-add-dialog";
 import { IncomeSourceCard } from "@/app/components/income-source-card";
 import { IncomeSourceFormFields } from "@/app/components/income-source-form-fields";
+import { useLocale } from "@/app/components/locale-provider";
 import {
   createEmptyIncomeSourceDraft,
   resolveIncomeSourceKindPreset,
@@ -14,7 +15,8 @@ import {
 
 function buildPreview(
   draft: IncomeSourceDraft,
-  customKindLabel: string
+  customKindLabel: string,
+  previewName: string
 ): IncomeSource {
   const preset = resolveIncomeSourceKindPreset(draft.kind);
 
@@ -22,7 +24,7 @@ function buildPreview(
     id: "preview",
     kind: draft.kind,
     customKindLabel: draft.kind === "other" ? customKindLabel.trim() : undefined,
-    name: draft.name.trim() || "Новый источник",
+    name: draft.name.trim() || previewName,
     monthlyAmount: draft.monthlyAmount,
     accentColor: preset.accentColor,
   };
@@ -37,6 +39,7 @@ export function IncomeSourceAddDialog({
   onClose: () => void;
   onAdd: (draft: IncomeSourceDraft) => void;
 }) {
+  const { t } = useLocale();
   const [draft, setDraft] = useState(createEmptyIncomeSourceDraft);
   const [customKindLabel, setCustomKindLabel] = useState("");
 
@@ -52,7 +55,7 @@ export function IncomeSourceAddDialog({
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const preview = buildPreview(draft, customKindLabel);
+    const preview = buildPreview(draft, customKindLabel, t("income.previewName"));
     if (!preview.name.trim()) {
       return;
     }
@@ -71,16 +74,16 @@ export function IncomeSourceAddDialog({
     onClose();
   }
 
-  const preview = buildPreview(draft, customKindLabel);
+  const preview = buildPreview(draft, customKindLabel, t("income.previewName"));
 
   return (
     <BubbleAddDialog
       open={open}
       onClose={onClose}
-      title="Добавить источник дохода"
+      title={t("income.addDialog.title")}
       titleId="add-income-source-title"
-      closeAriaLabel="Закрыть окно добавления источника дохода"
-      submitLabel="Добавить"
+      closeAriaLabel={t("income.addDialog.closeAria")}
+      submitLabel={t("common.add")}
       onSubmit={handleSubmit}
       preview={<IncomeSourceCard {...preview} />}
     >
@@ -91,9 +94,7 @@ export function IncomeSourceAddDialog({
         onKindChange={handleKindChange}
         onCustomKindLabelChange={setCustomKindLabel}
       />
-      <p className="text-xs leading-relaxed text-zinc-500">
-        Укажите ожидаемую сумму для себя — она не войдёт в активы и расчёты на главной.
-      </p>
+      <p className="text-xs leading-relaxed text-zinc-500">{t("income.addDialog.hint")}</p>
     </BubbleAddDialog>
   );
 }

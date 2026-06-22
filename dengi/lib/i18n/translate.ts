@@ -1,4 +1,4 @@
-import { messages } from "./messages";
+import { messages } from "./messages/index";
 import type { AppLang } from "./types";
 
 type MessageParams = Record<string, string | number>;
@@ -16,10 +16,10 @@ function lookup(tree: Record<string, unknown>, key: string): string | undefined 
 }
 
 export function createTranslator(lang: AppLang) {
-  const tree = messages[lang];
+  const tree = messages[lang] as Record<string, unknown>;
 
   return function t(key: string, params?: MessageParams) {
-    const template = lookup(tree, key) ?? lookup(messages.ru, key) ?? key;
+    const template = lookup(tree, key) ?? lookup(messages.ru as Record<string, unknown>, key) ?? key;
 
     if (!params) {
       return template;
@@ -32,3 +32,7 @@ export function createTranslator(lang: AppLang) {
 }
 
 export type Translator = ReturnType<typeof createTranslator>;
+
+export function getMessage(lang: AppLang, key: string, params?: MessageParams) {
+  return createTranslator(lang)(key, params);
+}

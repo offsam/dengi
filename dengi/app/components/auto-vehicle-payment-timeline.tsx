@@ -9,19 +9,16 @@ import {
 } from "@/app/components/inline-edit-icons";
 import { UsdAmount } from "@/app/components/usd-amount";
 import { BubbleCard } from "@/app/components/bubble-card";
-import { formatAppDate } from "@/lib/i18n/locale";
+import { useLocale } from "@/app/components/locale-provider";
+import { resolveAppLocale } from "@/lib/i18n/locale";
+import type { AppLang } from "@/lib/i18n/types";
 import { paymentAmountStyle } from "@/lib/auto-vehicles/payment-status-colors";
 import type { AutoVehiclePaymentType } from "@/lib/auto-vehicles/records/types";
 import type { PaymentTimelineEntry } from "@/lib/auto-vehicles/records/payment-timeline";
-import { formatDaysUntilPayment } from "@/lib/auto-vehicles/records/payment-timeline";
 import type { AutoVehicleRecord } from "@/lib/auto-vehicles/records/types";
 import { PAYMENTS_HERO_COMPRESS_MAX_PX } from "@/lib/auto-vehicles/credit-stats-layout";
-
-const PAYMENT_LABELS: Record<AutoVehiclePaymentType, string> = {
-  loan: "Кредит",
-  extra: "Досрочный",
-  insurance: "Страховка",
-};
+import { translatePresetName } from "@/lib/i18n/presets";
+import type { Translator } from "@/lib/i18n/translate";
 
 export function paymentEditFormId(recordId: string) {
   return `payment-edit-${recordId}`;
@@ -30,20 +27,57 @@ export function paymentEditFormId(recordId: string) {
 /** Отступ пузыря от краёв области прокрутки */
 const BUBBLE_PIN_INSET_PX = 6;
 
-function formatDate(iso: string) {
-  return formatAppDate(`${iso}T12:00:00.000Z`, {
+function paymentTypeLabel(type: AutoVehiclePaymentType | undefined, t: Translator) {
+  if (!type) {
+    return t("auto.payments.generic");
+  }
+
+  return t(`auto.paymentType.${type}`);
+}
+
+function formatDate(iso: string, lang: AppLang) {
+  return new Intl.DateTimeFormat(resolveAppLocale(lang), {
     month: "short",
     day: "numeric",
     year: "numeric",
-  });
+  }).format(new Date(`${iso}T12:00:00.000Z`));
 }
 
-function formatDaysUntil(dateIso: string) {
-  return formatDaysUntilPayment(dateIso);
+function formatDaysUntil(dateIso: string, t: Translator, lang: AppLang) {
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  const target = new Date(`${dateIso}T12:00:00.000Z`);
+  const days = Math.ceil((target.getTime() - today.getTime()) / 86_400_000);
+
+  if (days <= 0) {
+    return t("auto.paymentTimeline.today");
+  }
+
+  if (days === 1) {
+    return t("auto.paymentTimeline.tomorrow");
+  }
+
+  if (lang === "en") {
+    return t("auto.paymentTimeline.inDays", { n: String(days) });
+  }
+
+  const mod10 = days % 10;
+  const mod100 = days % 100;
+
+  if (mod10 === 1 && mod100 !== 11) {
+    return t("auto.paymentTimeline.inDaysOne", { n: String(days) });
+  }
+
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
+    return t("auto.paymentTimeline.inDaysFew", { n: String(days) });
+  }
+
+  return t("auto.paymentTimeline.inDaysMany", { n: String(days) });
 }
 
 function CurrentPaymentBubble({ entry }: { entry: PaymentTimelineEntry }) {
-  const daysLabel = formatDaysUntil(entry.date);
+  const { lang, t } = useLocale();
+  const daysLabel = formatDaysUntil(entry.date, t, lang);
 
   return (
     <BubbleCard variant="glass" className="px-3.5 py-2.5">
@@ -53,11 +87,10 @@ function CurrentPaymentBubble({ entry }: { entry: PaymentTimelineEntry }) {
             {daysLabel}
           </span>
           <p className="truncate text-[15px] font-semibold leading-snug text-zinc-900">
-            {entry.description}
+            {translatePresetName(entry.description, lang)}
           </p>
           <p className="mt-0.5 text-xs text-zinc-600">
-            {entry.paymentType ? PAYMENT_LABELS[entry.paymentType] : "Платёж"} ·{" "}
-            {formatDate(entry.date)}
+            {paymentTypeLabel(entry.paymentType, t)} · {formatDate(entry.date, lang)}
           </p>
         </div>
 
@@ -73,9 +106,11 @@ function CurrentPaymentBubble({ entry }: { entry: PaymentTimelineEntry }) {
 }
 
 function LoanPaidMessage() {
+  const { t } = useLocale();
+
   return (
     <BubbleCard variant="glass" className="px-3 py-2 text-center">
-      <p className="text-xs text-zinc-600">Кредит погашен</p>
+      <p className="text-xs text-zinc-600">{t("auto.payments.loanPaid")}</p>
     </BubbleCard>
   );
 }
@@ -95,6 +130,7 @@ function PaymentTimelineRow({
   onEdit: () => void;
   onCancel: () => void;
 }) {
+  const { lang, t } = useLocale();
   const isPaid = entry.status === "paid";
   const isUpcoming = entry.status === "upcoming";
   const amountStatus = isPaid ? "paid" : isUpcoming ? "upcoming" : "current";
@@ -107,11 +143,10 @@ function PaymentTimelineRow({
             isUpcoming ? "text-zinc-500" : "text-zinc-700"
           }`}
         >
-          {entry.description}
+          {translatePresetName(entry.description, lang)}
         </p>
         <p className="mt-0.5 text-xs text-zinc-500">
-          {entry.paymentType ? PAYMENT_LABELS[entry.paymentType] : "Платёж"} ·{" "}
-          {formatDate(entry.date)}
+          {paymentTypeLabel(entry.paymentType, t)} · {formatDate(entry.date, lang)}
         </p>
       </div>
 
@@ -131,14 +166,14 @@ function PaymentTimelineRow({
                 type="submit"
                 form={editFormId}
                 className={`${inlineEditIconButtonClassName} text-[#5DAA8C] hover:bg-[#5DAA8C]/10 hover:text-[#48946F]`}
-                aria-label="Сохранить"
+                aria-label={t("common.save")}
               >
                 <CheckIcon />
               </button>
               <button
                 type="button"
                 className={inlineEditIconButtonClassName}
-                aria-label="Отменить"
+                aria-label={t("common.cancel")}
                 onClick={onCancel}
               >
                 <CloseIcon />
@@ -148,7 +183,7 @@ function PaymentTimelineRow({
             <button
               type="button"
               className={inlineEditIconButtonClassName}
-              aria-label="Изменить"
+              aria-label={t("common.edit")}
               onClick={onEdit}
             >
               <PencilIcon />
@@ -210,6 +245,7 @@ export function AutoVehiclePaymentTimeline({
   /** 0–1: пузырь упёрся вверх и «толкает» hero-машину */
   onHeroCompress?: (compress: number) => void;
 }) {
+  const { t } = useLocale();
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const currentAnchorRef = useRef<HTMLDivElement>(null);
@@ -340,7 +376,7 @@ export function AutoVehiclePaymentTimeline({
   if (entries.length === 0) {
     return (
       <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-4 py-8 text-center text-sm text-zinc-500">
-        Платежей пока нет.
+        {t("auto.payments.empty")}
       </p>
     );
   }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { HorizontalWheelScroll } from "@/app/components/horizontal-wheel-scroll";
 import { HorizontalReorderButtons } from "@/app/components/reorder-controls";
 import { AutoVehicleCard, type AutoVehicleTileDensity } from "@/app/components/auto-vehicle-card";
+import { useLocale } from "@/app/components/locale-provider";
 import { getAutoVehicleTitle } from "@/lib/dashboard/auto";
 import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
 
@@ -33,6 +34,7 @@ function AutoVehicleItem({
   total: number;
   onMoveItem?: (id: string, direction: -1 | 1) => void;
 }) {
+  const { t } = useLocale();
   const title = getAutoVehicleTitle(vehicle);
   const card = <AutoVehicleCard vehicle={vehicle} density={density} />;
 
@@ -41,7 +43,7 @@ function AutoVehicleItem({
       <Link
         href={`/auto/${vehicle.id}`}
         className="block shrink-0 snap-start rounded-lg transition-transform active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
-        aria-label={`Открыть ${title}`}
+        aria-label={t("common.openItem", { name: title })}
       >
         {card}
       </Link>
@@ -72,13 +74,14 @@ export function AutoVehiclesCarousel({
   editOrder?: boolean;
   onMoveItem?: (id: string, direction: -1 | 1) => void;
 }) {
+  const { t } = useLocale();
   const total = vehicles.length;
 
   if (density === "minimal") {
     const [topRow, bottomRow] = splitVehiclesIntoTwoRows(vehicles);
 
     return (
-      <div className="space-y-1.5" aria-label="Авто">
+      <div className="space-y-1.5" aria-label={t("auto.carousel.ariaLabel")}>
         <HorizontalWheelScroll className={MINIMAL_ROW_CLASSNAME}>
           {topRow.map((vehicle, index) => (
             <AutoVehicleItem
@@ -112,7 +115,7 @@ export function AutoVehiclesCarousel({
   }
 
   return (
-    <HorizontalWheelScroll className={FULL_ROW_CLASSNAME} ariaLabel="Авто">
+    <HorizontalWheelScroll className={FULL_ROW_CLASSNAME} ariaLabel={t("auto.carousel.ariaLabel")}>
       {vehicles.map((vehicle, index) => (
         <AutoVehicleItem
           key={vehicle.id}

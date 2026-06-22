@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { BubbleCard } from "@/app/components/bubble-card";
 import { UsdAmount } from "@/app/components/usd-amount";
+import { useLocale } from "@/app/components/locale-provider";
 import { useAutoVehicles } from "@/app/hooks/use-auto-vehicles";
 import { useAutoVehicleRecords } from "@/app/hooks/use-auto-vehicle-records";
 import { computeAutoVehicleLifetimeSpendingTotals } from "@/lib/auto-vehicles/records/expense-stats";
@@ -19,6 +20,7 @@ function StatBox({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export function AutoVehicleArchiveTotals({ vehicleId }: { vehicleId: string }) {
+  const { t } = useLocale();
   const { getVehicle } = useAutoVehicles();
   const vehicle = getVehicle(vehicleId);
   const { allVehicleRecords } = useAutoVehicleRecords(vehicleId);
@@ -38,14 +40,14 @@ export function AutoVehicleArchiveTotals({ vehicleId }: { vehicleId: string }) {
   return (
     <section className="space-y-2">
       <h2 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-        Итого за время владения
+        {t("auto.archiveTotals.sectionTitle")}
       </h2>
       <div className="grid grid-cols-2 gap-3">
-        <StatBox label="Платежи" value={<UsdAmount amount={totals.paymentsTotal} exact />} />
-        <StatBox label="Расходы" value={<UsdAmount amount={totals.expensesTotal} exact />} />
+        <StatBox label={t("auto.archiveTotals.payments")} value={<UsdAmount amount={totals.paymentsTotal} exact />} />
+        <StatBox label={t("auto.archiveTotals.expenses")} value={<UsdAmount amount={totals.expensesTotal} exact />} />
       </div>
       <StatBox
-        label="Всего вложено"
+        label={t("auto.archiveTotals.investedTotal")}
         value={<UsdAmount amount={totals.investedTotal} exact />}
       />
     </section>

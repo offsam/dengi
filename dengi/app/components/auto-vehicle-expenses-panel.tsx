@@ -8,6 +8,9 @@ import { useCustomExpenseCategories } from "@/app/hooks/use-custom-expense-categ
 import { UsdAmount } from "@/app/components/usd-amount";
 import { APP_BUBBLE_INPUT } from "@/lib/app-theme";
 import { formatAppDate } from "@/lib/i18n/locale";
+import { useLocale } from "@/app/components/locale-provider";
+import { translatePresetName } from "@/lib/i18n/presets";
+import { getAutoExpenseTypeLabel } from "@/lib/i18n/labels";
 import type { AutoVehicleExpenseType } from "@/lib/auto-vehicles/records/types";
 import {
   AUTO_VEHICLE_EXPENSE_LABELS,
@@ -41,6 +44,7 @@ export function AutoVehicleExpensesPanel({
   vehicleId: string;
   readOnly?: boolean;
 }) {
+  const { lang, t } = useLocale();
   const { records, addRecord } = useAutoVehicleRecords(vehicleId, "expense");
   const { categories, ensureCategory } = useCustomExpenseCategories(vehicleId);
   const [open, setOpen] = useState(false);
@@ -93,7 +97,7 @@ export function AutoVehicleExpensesPanel({
         kind: "expense",
         customExpenseCategoryId: customCategoryId,
         amount: parsedAmount,
-        description: trimmedDescription || customCategory?.label || "Расход",
+        description: trimmedDescription || customCategory?.label || t("auto.expenseType.default"),
         occurredAt,
       });
     } else {
@@ -115,10 +119,10 @@ export function AutoVehicleExpensesPanel({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-zinc-900">Расходы на авто</p>
+        <p className="text-sm font-semibold text-zinc-900">{t("auto.expenses.title")}</p>
         {readOnly ? null : (
           <BubbleAddButton
-            ariaLabel={open ? "Закрыть форму добавления" : "Добавить расход"}
+            ariaLabel={open ? t("auto.expenses.closeFormAria") : t("auto.expenses.addAria")}
             active={open}
             onClick={() => setOpen((current) => !current)}
           />
@@ -130,7 +134,7 @@ export function AutoVehicleExpensesPanel({
           <BubbleCard className="space-y-3 p-4">
             <label className="block space-y-1.5">
               <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                Категория
+                {t("common.category")}
               </span>
               <select
                 className={inputClassName}
@@ -161,13 +165,13 @@ export function AutoVehicleExpensesPanel({
             {isOtherSelected ? (
               <label className="block space-y-1.5">
                 <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Название категории
+                  {t("auto.expenses.categoryName")}
                 </span>
                 <input
                   className={inputClassName}
                   value={customCategoryName}
                   onChange={(event) => setCustomCategoryName(event.target.value)}
-                  placeholder="Например, мойка, шины"
+                  placeholder={t("auto.expenses.categoryPlaceholder")}
                   required
                 />
               </label>
@@ -176,7 +180,7 @@ export function AutoVehicleExpensesPanel({
             <div className="grid grid-cols-2 gap-3">
               <label className="block space-y-1.5">
                 <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Сумма
+                  {t("common.amount")}
                 </span>
                 <input
                   type="number"
@@ -191,7 +195,7 @@ export function AutoVehicleExpensesPanel({
 
               <label className="block space-y-1.5">
                 <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Дата
+                  {t("common.date")}
                 </span>
                 <input
                   type="date"
@@ -205,13 +209,13 @@ export function AutoVehicleExpensesPanel({
 
             <label className="block space-y-1.5">
               <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                Описание
+                {t("common.description")}
               </span>
               <input
                 className={inputClassName}
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                placeholder="Необязательно"
+                placeholder={t("common.optional")}
               />
             </label>
 
@@ -219,7 +223,7 @@ export function AutoVehicleExpensesPanel({
               type="submit"
               className="w-full rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
             >
-              Добавить расход
+              {t("auto.expenses.addExpense")}
             </button>
           </BubbleCard>
         </form>
@@ -227,7 +231,7 @@ export function AutoVehicleExpensesPanel({
 
       {records.length === 0 ? (
         <BubbleCard className="border-dashed px-4 py-8 text-center text-sm text-zinc-500">
-          Расходов пока нет.
+          {t("auto.expenses.empty")}
         </BubbleCard>
       ) : (
         <BubbleCard>
@@ -238,10 +242,10 @@ export function AutoVehicleExpensesPanel({
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-zinc-900">
-                  {record.description}
+                  {translatePresetName(record.description, lang)}
                 </p>
                 <p className="mt-0.5 text-xs text-zinc-500">
-                  {resolveExpenseCategoryLabel(record, categories)} ·{" "}
+                  {resolveExpenseCategoryLabel(record, categories, lang)} ·{" "}
                   {formatDate(record.occurredAt)}
                 </p>
               </div>

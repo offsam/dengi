@@ -13,11 +13,13 @@ import { CreditCardTile } from "@/app/components/credit-card-tile";
 import { CreditCardTransactionsChart } from "@/app/components/credit-card-transactions-chart";
 import { CreditCardTransactionsPanel } from "@/app/components/credit-card-transactions-panel";
 import { SimpleDeleteDialog } from "@/app/components/simple-delete-dialog";
+import { useLocale } from "@/app/components/locale-provider";
 import { useCreditCards } from "@/app/hooks/use-credit-cards";
 import { APP_PAGE_CLASS } from "@/lib/app-theme";
 import type { CreditCard } from "@/lib/credit-cards/types";
 
 function CreditCardDetailContent({ card }: { card: CreditCard }) {
+  const { t } = useLocale();
   const router = useRouter();
   const { updateCard, deleteCard } = useCreditCards();
   const [tab, setTab] = useState<CreditCardDetailTab>("report");
@@ -31,7 +33,7 @@ function CreditCardDetailContent({ card }: { card: CreditCard }) {
             href="/"
             className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
           >
-            Назад
+            {t("common.back")}
           </Link>
           <h1 className="text-sm font-semibold tracking-tight">{card.name}</h1>
           <span className="w-10" aria-hidden />
@@ -73,8 +75,8 @@ function CreditCardDetailContent({ card }: { card: CreditCard }) {
 
       <SimpleDeleteDialog
         open={deleteOpen}
-        title="Удалить карту?"
-        description={`«${card.name}» исчезнет с главного экрана. Транзакции по карте тоже будут недоступны.`}
+        title={t("credit.deleteDialog.title")}
+        description={t("credit.deleteDialog.description", { name: card.name })}
         onClose={() => setDeleteOpen(false)}
         onConfirm={() => {
           deleteCard(card.id);
@@ -87,6 +89,7 @@ function CreditCardDetailContent({ card }: { card: CreditCard }) {
 }
 
 export function CreditCardSettingsView({ cardId }: { cardId: string }) {
+  const { t } = useLocale();
   const { getCard } = useCreditCards();
   const card = getCard(cardId);
 
@@ -97,9 +100,9 @@ export function CreditCardSettingsView({ cardId }: { cardId: string }) {
           href="/"
           className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
         >
-          На главную
+          {t("common.goHome")}
         </Link>
-        <p className="text-sm text-zinc-600">Карта не найдена.</p>
+        <p className="text-sm text-zinc-600">{t("common.notFound")}</p>
       </div>
     );
   }

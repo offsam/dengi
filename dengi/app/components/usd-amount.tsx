@@ -1,6 +1,7 @@
 "use client";
 
 import { formatUsdAmount } from "@/lib/format-money";
+import { useLocale } from "@/app/components/locale-provider";
 import { toAutoVehicleNumber } from "@/lib/auto-vehicles/form-utils";
 
 type UsdAmountTone = "neutral" | "danger" | "positive";
@@ -152,6 +153,8 @@ export function TermMonthsInput({
   parse: (raw: string, fallback: number) => number;
   fallback: number;
 }) {
+  const { t } = useLocale();
+
   return (
     <span className="inline-flex items-center tabular-nums whitespace-nowrap text-[15px] leading-none text-zinc-900">
       <input
@@ -165,7 +168,7 @@ export function TermMonthsInput({
         onChange={(event) => onChange(parse(event.target.value, fallback))}
       />
       <span className={suffixClassName} aria-hidden>
-        мес
+        {t("common.monthsShort")}
       </span>
     </span>
   );

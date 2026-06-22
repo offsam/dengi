@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useLocale } from "@/app/components/locale-provider";
 import {
   FormRowEnd,
   PercentAmountInput,
@@ -74,6 +75,7 @@ export function EditableFormValue<T>({
   edit,
   onSave,
 }: EditableFormValueProps<T>) {
+  const { t } = useLocale();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const editRegionRef = useRef<HTMLDivElement>(null);
@@ -112,7 +114,7 @@ export function EditableFormValue<T>({
         aria-labelledby={labelId}
       >
         <span id={labelId} className="sr-only">
-          {editing ? "Редактирование значения" : "Значение поля"}
+          {editing ? t("common.editingValue") : t("common.fieldValue")}
         </span>
 
         {editing ? (
@@ -136,7 +138,7 @@ export function EditableFormValue<T>({
             <button
               type="button"
               className={`${iconButtonClassName} text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700`}
-              aria-label="Сохранить"
+              aria-label={t("common.save")}
               onClick={saveEditing}
             >
               <CheckIcon />
@@ -144,7 +146,7 @@ export function EditableFormValue<T>({
             <button
               type="button"
               className={iconButtonClassName}
-              aria-label="Отменить"
+              aria-label={t("common.cancel")}
               onClick={cancelEditing}
             >
               <CloseIcon />
@@ -156,7 +158,7 @@ export function EditableFormValue<T>({
             <button
               type="button"
               className={iconButtonClassName}
-              aria-label="Изменить"
+              aria-label={t("common.edit")}
               onClick={startEditing}
             >
               <PencilIcon />
@@ -222,12 +224,14 @@ export function EditableTermMonthsValue({
   value: number;
   onSave: (value: number) => void;
 }) {
+  const { t } = useLocale();
+
   return (
     <EditableFormValue
       value={value}
       display={(months) => (
         <span className="tabular-nums whitespace-nowrap text-[15px] leading-none text-zinc-900">
-          {toLoanTermMonthsInput(months) || "0"} мес
+          {toLoanTermMonthsInput(months) || "0"} {t("common.monthsShort")}
         </span>
       )}
       edit={(months, onChange) => (
@@ -340,13 +344,14 @@ function BodyColorSwatches({
   value: VehicleBodyColor;
   onChange: (next: VehicleBodyColor) => void;
 }) {
+  const { t } = useLocale();
   const selectedHex = value.hex.toLowerCase();
 
   return (
     <div
       className="flex max-w-[11rem] flex-wrap justify-end gap-1.5"
       role="listbox"
-      aria-label="Цвет кузова"
+      aria-label={t("auto.form.bodyColorAria")}
     >
       {POPULAR_BODY_COLORS.map((color) => {
         const selected = color.hex.toLowerCase() === selectedHex;

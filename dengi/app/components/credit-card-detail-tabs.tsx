@@ -1,12 +1,9 @@
+"use client";
+
 import { BubbleSegmentedControl } from "@/app/components/bubble-segmented-control";
+import { useLocale } from "@/app/components/locale-provider";
 
 export type CreditCardDetailTab = "settings" | "transactions" | "report";
-
-const TABS: { id: CreditCardDetailTab; label: string }[] = [
-  { id: "report", label: "Отчёт" },
-  { id: "transactions", label: "Транзакции" },
-  { id: "settings", label: "Настройки" },
-];
 
 export function CreditCardDetailTabs({
   active,
@@ -15,12 +12,19 @@ export function CreditCardDetailTabs({
   active: CreditCardDetailTab;
   onChange: (tab: CreditCardDetailTab) => void;
 }) {
+  const { t } = useLocale();
+  const tabs: { id: CreditCardDetailTab; label: string }[] = [
+    { id: "report", label: t("credit.tabs.report") },
+    { id: "transactions", label: t("credit.tabs.transactions") },
+    { id: "settings", label: t("credit.tabs.settings") },
+  ];
+
   return (
     <BubbleSegmentedControl
-      options={TABS}
+      options={tabs}
       value={active}
       onChange={onChange}
-      ariaLabel="Разделы карты"
+      ariaLabel={t("credit.tabs.ariaLabel")}
     />
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useLocale } from "@/app/components/locale-provider";
 import { CarIconImage } from "@/app/components/car-icon-image";
 import { UsdAmount } from "@/app/components/usd-amount";
 import { useAutoVehicleRecords } from "@/app/hooks/use-auto-vehicle-records";
@@ -46,6 +47,7 @@ function progressFillRadius(trailWidth: number) {
 
 /** Прогресс выплаты кредита — зелёный след слева, машина внутри полоски на границе */
 export function AutoVehicleLoanPaidProgress({ vehicle }: { vehicle: AutoVehicle }) {
+  const { t } = useLocale();
   const { allVehicleRecords } = useAutoVehicleRecords(vehicle.id);
   const bodyTypeIcon = resolveBodyTypeIcon(vehicle.bodyIconId);
 
@@ -93,7 +95,7 @@ export function AutoVehicleLoanPaidProgress({ vehicle }: { vehicle: AutoVehicle 
       aria-valuenow={Math.round(percent)}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-label="Выплачено по кредиту"
+      aria-label={t("auto.loanProgress.ariaLabel")}
     >
       <div className="relative h-[54px] w-full overflow-visible">
         <div
@@ -148,10 +150,10 @@ export function AutoVehicleLoanPaidProgress({ vehicle }: { vehicle: AutoVehicle 
               exact
               className="text-[14px] font-semibold leading-none tracking-tight tabular-nums text-[#5DAA8C]"
             />{" "}
-            погашено
+            {t("auto.loanProgress.paid")}
           </span>
           <span>
-            из{" "}
+            {t("auto.loanProgress.of")}{" "}
             <UsdAmount amount={loanTotal} exact className="text-[14px] font-medium text-zinc-900" />
           </span>
         </div>

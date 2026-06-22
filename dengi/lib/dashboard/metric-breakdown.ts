@@ -5,8 +5,9 @@ import type { CreditCard } from "@/lib/credit-cards/types";
 import type { HousingBill } from "./housing-bills";
 import type { DebitCashAccount } from "./debit-accounts";
 
+import { messages } from "@/lib/i18n/messages/index";
+import { translatePresetName, translateShortDueDate } from "@/lib/i18n/presets";
 import type { AppLang } from "@/lib/i18n/types";
-import { messages } from "@/lib/i18n/messages";
 
 export type DashboardMetricId =
   | "totalDebt"
@@ -102,9 +103,9 @@ function vehicleTitle(vehicle: Pick<AutoVehicle, "catalogId" | "year">) {
   return buildVehicleDisplayTitle(vehicle.catalogId, vehicle.year);
 }
 
-function cardBankLabel(card: CreditCard) {
+function cardBankLabel(card: CreditCard, lang: AppLang = "ru") {
   if (card.bankId === "other") {
-    return card.customBankName?.trim() || "Другой банк";
+    return card.customBankName?.trim() || messages[lang].credit.bank.other;
   }
 
   return BANKS[card.bankId]?.name ?? card.bankId;
@@ -127,8 +128,8 @@ export function computeDashboardMetricBreakdowns(
       .filter((card) => card.balance > 0)
       .map((card) => ({
         id: `card-debt-${card.id}`,
-        label: card.name,
-        detail: cardBankLabel(card),
+        label: translatePresetName(card.name, lang),
+        detail: cardBankLabel(card, lang),
         amount: card.balance,
       })),
     ...financedVehicles
@@ -136,7 +137,9 @@ export function computeDashboardMetricBreakdowns(
       .map((vehicle) => ({
         id: `vehicle-debt-${vehicle.id}`,
         label: vehicleTitle(vehicle),
-        detail: vehicle.financingType === "leasing" ? "Лизинг" : "Кредит",
+        detail: vehicle.financingType === "leasing"
+          ? messages[lang].credit.financingDetail.leasing
+          : messages[lang].credit.financingDetail.credit,
         amount: vehicle.remaining,
       })),
   ]);
@@ -150,8 +153,8 @@ export function computeDashboardMetricBreakdowns(
       .filter(({ interest }) => interest > 0)
       .map(({ card, interest }) => ({
         id: `card-interest-${card.id}`,
-        label: card.name,
-        detail: `${cardBankLabel(card)} · ${card.apr.toFixed(2)}% APR`,
+        label: translatePresetName(card.name, lang),
+        detail: `${cardBankLabel(card, lang)} · ${card.apr.toFixed(2)}% APR`,
         amount: interest,
       })),
     ...financedVehicles
@@ -159,7 +162,7 @@ export function computeDashboardMetricBreakdowns(
       .map((vehicle) => ({
         id: `vehicle-interest-${vehicle.id}`,
         label: vehicleTitle(vehicle),
-        detail: "Проценты по кредиту",
+        detail: messages[lang].auto.card.loanInterest,
         amount: vehicle.loanInterest,
       })),
   ]);
@@ -169,8 +172,8 @@ export function computeDashboardMetricBreakdowns(
       .filter((account) => account.balance > 0)
       .map((account) => ({
         id: `debit-${account.id}`,
-        label: account.name,
-        detail: account.bank,
+        label: translatePresetName(account.name, lang),
+        detail: translatePresetName(account.bank, lang),
         amount: account.balance,
       })),
     ...input.vehicles
@@ -178,7 +181,7 @@ export function computeDashboardMetricBreakdowns(
       .map((vehicle) => ({
         id: `vehicle-asset-${vehicle.id}`,
         label: vehicleTitle(vehicle),
-        detail: "Стоимость покупки",
+        detail: messages[lang].auto.stats.purchaseCost,
         amount: vehicle.purchasePrice,
       })),
   ]);
@@ -188,8 +191,8 @@ export function computeDashboardMetricBreakdowns(
       .filter((bill) => bill.amount > 0)
       .map((bill) => ({
         id: `bill-${bill.id}`,
-        label: bill.name,
-        detail: bill.date ? `${duePrefix} ${bill.date}` : undefined,
+        label: translatePresetName(bill.name, lang),
+        detail: bill.date ? `${duePrefix} ${translateShortDueDate(bill.date, lang)}` : undefined,
         amount: bill.amount,
       }))
   );

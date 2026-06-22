@@ -50,7 +50,7 @@ export function IncomeSourceCard({
   const kindLabel = getIncomeSourceKindLabel({ kind, customKindLabel }, lang);
 
   if (density === "minimal" && !isDetail) {
-    const label = formatCompactCardName(name);
+    const label = formatCompactCardName(name, lang);
 
     return (
       <BubbleCard className="w-[115px] shrink-0 p-2">

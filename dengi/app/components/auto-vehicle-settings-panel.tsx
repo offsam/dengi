@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AutoVehicleFormFields } from "@/app/components/auto-vehicle-form-fields";
+import { useLocale } from "@/app/components/locale-provider";
 import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
 
 type PanelMode = "view" | "edit" | "saved";
@@ -15,6 +16,7 @@ export function AutoVehicleSettingsPanel({
   onSave: (next: AutoVehicle) => void;
   onDelete: () => void;
 }) {
+  const { t } = useLocale();
   const [mode, setMode] = useState<PanelMode>("view");
   const [draft, setDraft] = useState(vehicle);
 
@@ -65,14 +67,14 @@ export function AutoVehicleSettingsPanel({
             className="shrink-0 py-3 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900"
             onClick={cancelEditing}
           >
-            Отмена
+            {t("common.cancel")}
           </button>
           <button
             type="button"
             className="flex-1 rounded-full bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
             onClick={saveEditing}
           >
-            Сохранить
+            {t("common.save")}
           </button>
         </div>
       ) : saved ? (
@@ -82,7 +84,7 @@ export function AutoVehicleSettingsPanel({
           disabled
           aria-live="polite"
         >
-          Сохранено
+          {t("common.saved")}
         </button>
       ) : (
         <div className="space-y-2 pt-1">
@@ -94,7 +96,7 @@ export function AutoVehicleSettingsPanel({
               setMode("edit");
             }}
           >
-            Редактировать
+            {t("common.edit")}
           </button>
 
           <button
@@ -102,7 +104,7 @@ export function AutoVehicleSettingsPanel({
             className="w-full py-2 text-sm font-medium text-rose-600 transition-colors hover:text-rose-700"
             onClick={onDelete}
           >
-            Удалить авто
+            {t("auto.settings.delete")}
           </button>
         </div>
       )}

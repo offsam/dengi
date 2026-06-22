@@ -16,6 +16,7 @@ import {
   resolveBodyTypeIcon,
   type BodyTypeIcon,
 } from "@/lib/car-icons";
+import { useLocale } from "@/app/components/locale-provider";
 
 /** Строка формы — компактная иконка */
 const BODY_TYPE_INLINE_ICON = {
@@ -90,6 +91,8 @@ export function BodyTypePickerDialog({
   onClose: () => void;
   onSelect: (icon: BodyTypeIcon) => void;
 }) {
+  const { t } = useLocale();
+
   useEffect(() => {
     if (!open) {
       return;
@@ -126,7 +129,7 @@ export function BodyTypePickerDialog({
       <button
         type="button"
         className={`absolute inset-0 ${APP_MODAL_SCRIM}`}
-        aria-label="Закрыть выбор типа кузова"
+        aria-label={t("auto.bodyTypePicker.closeAria")}
         onClick={onClose}
       />
 
@@ -140,10 +143,10 @@ export function BodyTypePickerDialog({
                 id="body-type-picker-title"
                 className="text-sm font-semibold tracking-tight text-zinc-900"
               >
-                Тип кузова
+                {t("auto.bodyTypePicker.title")}
               </h2>
               <p className="mt-0.5 text-[11px] text-zinc-500">
-                {BODY_TYPE_ICON_COUNT} типов
+                {BODY_TYPE_ICON_COUNT}
               </p>
             </div>
             <button
@@ -151,7 +154,7 @@ export function BodyTypePickerDialog({
               onClick={onClose}
               className="rounded-full px-2 py-1 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-900"
             >
-              Отмена
+              {t("common.cancel")}
             </button>
           </div>
         </div>
@@ -160,13 +163,14 @@ export function BodyTypePickerDialog({
           <div className="grid grid-cols-4 gap-3">
             {BODY_TYPE_ICONS.map((icon) => {
               const isSelected = icon.id === selected.id;
+              const label = t(`auto.bodyTypes.${icon.id}`);
 
               return (
                 <button
                   key={icon.id}
                   type="button"
                   aria-pressed={isSelected}
-                  aria-label={icon.label}
+                  aria-label={label}
                   className={`flex min-h-[7.5rem] flex-col items-center justify-start gap-1.5 rounded-xl px-1 pt-2 pb-2 transition-colors ${
                     isSelected
                       ? APP_BUBBLE_INSET_SELECTED
@@ -183,7 +187,7 @@ export function BodyTypePickerDialog({
                     variant="picker"
                   />
                   <span className="flex min-h-[2.5rem] items-start justify-center line-clamp-2 text-center text-[16px] font-medium leading-tight text-zinc-700">
-                    {icon.label}
+                    {label}
                   </span>
                 </button>
               );
@@ -210,8 +214,10 @@ export function BodyTypePickerRow({
   highlighted = false,
   highlightClassName = "",
 }: BodyTypePickerRowProps) {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const icon = resolveBodyTypeIcon(value);
+  const label = t(`auto.bodyTypes.${icon.id}`);
 
   return (
     <>
@@ -224,7 +230,7 @@ export function BodyTypePickerRow({
           onClick={() => setOpen(true)}
         >
           <BodyTypeIconSlot fileName={icon.fileName} iconId={icon.id} variant="inline" />
-          <span>{icon.label}</span>
+          <span>{label}</span>
         </button>
       </FormRowEnd>
 

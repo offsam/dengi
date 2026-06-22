@@ -1,18 +1,10 @@
 import type { DashboardMetricChartSegment } from "@/lib/dashboard/metric-breakdown";
+import type { AppLang } from "@/lib/i18n/types";
+import { getCreditChartSegmentLabel } from "@/lib/i18n/labels";
 import type {
   CreditCardTransaction,
   CreditCardTransactionType,
 } from "./types";
-
-export const CREDIT_CARD_TRANSACTION_TYPE_LABELS: Record<
-  CreditCardTransactionType,
-  string
-> = {
-  purchase: "Покупки",
-  payment: "Платежи",
-  interest: "Проценты",
-  fee: "Комиссии",
-};
 
 const TRANSACTION_CHART_COLORS: Record<CreditCardTransactionType, string> = {
   purchase: "#7B9FD4",
@@ -55,27 +47,20 @@ function distributePercents(amounts: number[], total: number) {
   return percents;
 }
 
-/** Доли транзакций по типу для круговой диаграммы */
 export function computeCreditCardTransactionChartSegments(
-  transactions: CreditCardTransaction[]
+  transactions: CreditCardTransaction[],
+  lang: AppLang = "ru"
 ): DashboardMetricChartSegment[] {
   const totals = new Map<CreditCardTransactionType, number>();
 
   for (const transaction of transactions) {
-    totals.set(
-      transaction.type,
-      (totals.get(transaction.type) ?? 0) + transaction.amount
-    );
+    totals.set(transaction.type, (totals.get(transaction.type) ?? 0) + transaction.amount);
   }
 
-  const entries = TRANSACTION_TYPE_ORDER.flatMap((type) => {
-    const amount = totals.get(type);
-    if (!amount || amount <= 0) {
-      return [];
-    }
-
-    return [{ id: type, type, amount }];
-  });
+  const entries = TRANSACTION_TYPE_ORDER.map((type) => ({
+    type,
+    amount: totals.get(type) ?? 0,
+  })).filter((entry) => entry.amount > 0);
 
   const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
   const percents = distributePercents(
@@ -84,8 +69,8 @@ export function computeCreditCardTransactionChartSegments(
   );
 
   return entries.map((entry, index) => ({
-    id: entry.id,
-    label: CREDIT_CARD_TRANSACTION_TYPE_LABELS[entry.type],
+    id: entry.type,
+    label: getCreditChartSegmentLabel(entry.type, lang),
     amount: entry.amount,
     percent: percents[index] ?? 0,
     color: TRANSACTION_CHART_COLORS[entry.type],

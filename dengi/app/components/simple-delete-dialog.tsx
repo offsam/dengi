@@ -2,13 +2,14 @@
 
 import { useEffect } from "react";
 import { BubbleCard } from "@/app/components/bubble-card";
+import { useLocale } from "@/app/components/locale-provider";
 
 /** Простое подтверждение удаления */
 export function SimpleDeleteDialog({
   open,
   title,
   description,
-  confirmLabel = "Удалить",
+  confirmLabel,
   onClose,
   onConfirm,
 }: {
@@ -19,6 +20,9 @@ export function SimpleDeleteDialog({
   onClose: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useLocale();
+  const resolvedConfirmLabel = confirmLabel ?? t("common.delete");
+
   useEffect(() => {
     if (!open) {
       return;
@@ -53,7 +57,7 @@ export function SimpleDeleteDialog({
       <button
         type="button"
         className="absolute inset-0 bg-black/40"
-        aria-label="Закрыть"
+        aria-label={t("common.closeAria")}
         onClick={onClose}
       />
 
@@ -71,14 +75,14 @@ export function SimpleDeleteDialog({
             className="w-full rounded-full bg-rose-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-rose-700"
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {resolvedConfirmLabel}
           </button>
           <button
             type="button"
             className="w-full rounded-full px-5 py-3 text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900"
             onClick={onClose}
           >
-            Отмена
+            {t("common.cancel")}
           </button>
         </div>
       </BubbleCard>

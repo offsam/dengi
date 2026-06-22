@@ -1,5 +1,8 @@
-import type { BankId } from "@/lib/bank-logos";
-import { BANKS, isOtherBank } from "@/lib/bank-logos";
+import type { AppLang } from "@/lib/i18n/types";
+import { getDebitKindLabel } from "@/lib/i18n/labels";
+import { translatePresetName } from "@/lib/i18n/presets";
+import { messages } from "@/lib/i18n/messages/index";
+import { BANKS, isOtherBank, type BankId } from "@/lib/bank-logos";
 import { readDebitCashAccounts } from "./debit-storage";
 
 export type DebitAccountKind = "bank" | "cash" | "crypto";
@@ -25,10 +28,11 @@ export type DebitCashAccount = {
 
 export type DebitCashAccountDraft = Omit<DebitCashAccount, "id">;
 
+/** @deprecated Используйте getDebitKindLabel(kind, lang) */
 export const DEBIT_ACCOUNT_KIND_LABELS: Record<DebitAccountKind, string> = {
-  bank: "Банк",
-  cash: "Наличные",
-  crypto: "Криптовалюта",
+  bank: messages.ru.debit.kind.bank,
+  cash: messages.ru.debit.kind.cash,
+  crypto: messages.ru.debit.kind.crypto,
 };
 
 export const CRYPTO_EXCHANGES: Record<
@@ -38,7 +42,7 @@ export const CRYPTO_EXCHANGES: Record<
   coinbase: { id: "coinbase", name: "Coinbase", accentColor: "bg-blue-500" },
   binance: { id: "binance", name: "Binance", accentColor: "bg-amber-500" },
   kraken: { id: "kraken", name: "Kraken", accentColor: "bg-violet-600" },
-  other: { id: "other", name: "Другая биржа", accentColor: "bg-zinc-600" },
+  other: { id: "other", name: messages.ru.preset.cryptoOtherExchange, accentColor: "bg-zinc-600" },
 };
 
 export const POPULAR_CRYPTO_EXCHANGE_IDS: CryptoExchangeId[] = [
@@ -76,8 +80,12 @@ export const DEBIT_CASH_ACCOUNTS: DebitCashAccount[] = [
   },
 ];
 
-export function resolveCryptoExchange(exchangeId: CryptoExchangeId) {
-  return CRYPTO_EXCHANGES[exchangeId] ?? CRYPTO_EXCHANGES.other;
+export function resolveCryptoExchange(exchangeId: CryptoExchangeId, lang: AppLang = "ru") {
+  const base = CRYPTO_EXCHANGES[exchangeId] ?? CRYPTO_EXCHANGES.other;
+  if (exchangeId === "other" && lang === "en") {
+    return { ...base, name: messages.en.preset.cryptoOtherExchange };
+  }
+  return base;
 }
 
 export function inferDebitAccountKind(
@@ -131,31 +139,34 @@ export function resolveDebitBankLabel(account: Pick<DebitCashAccount, "bankId" |
 }
 
 export function resolveDebitExchangeLabel(
-  account: Pick<DebitCashAccount, "exchangeId" | "customExchangeName">
+  account: Pick<DebitCashAccount, "exchangeId" | "customExchangeName">,
+  lang: AppLang = "ru"
 ) {
   if (!account.exchangeId) {
     return null;
   }
 
   if (account.exchangeId === "other") {
-    return account.customExchangeName?.trim() || CRYPTO_EXCHANGES.other.name;
+    return account.customExchangeName?.trim() || resolveCryptoExchange("other", lang).name;
   }
 
-  return resolveCryptoExchange(account.exchangeId).name;
+  return resolveCryptoExchange(account.exchangeId, lang).name;
 }
 
 /** Подпись institution на карточке */
-export function resolveDebitInstitutionLabel(account: DebitCashAccount) {
+export function resolveDebitInstitutionLabel(account: DebitCashAccount, lang: AppLang = "ru") {
   if (account.incognito) {
-    return "Инкогнито";
+    return translatePresetName("Инкогнито", lang);
   }
 
   if (account.kind === "cash") {
-    return "Наличные";
+    return translatePresetName("Наличные", lang);
   }
 
   if (account.kind === "crypto") {
-    return resolveDebitExchangeLabel(account) ?? "Криптовалюта";
+    return (
+      resolveDebitExchangeLabel(account, lang) ?? translatePresetName("Криптовалюта", lang)
+    );
   }
 
   return resolveDebitBankLabel(account);
@@ -305,14 +316,15 @@ export function getDebitCashAccount(id: string | undefined) {
   return readDebitCashAccounts().find((account) => account.id === id) ?? null;
 }
 
-export function formatDebitCashAccountLabel(account: DebitCashAccount) {
+export function formatDebitCashAccountLabel(account: DebitCashAccount, lang: AppLang = "ru") {
+  const name = translatePresetName(account.name, lang);
   if (account.incognito) {
-    return `${account.name} · инкогнито`;
+    return `${name} ${messages[lang].debit.incognitoSuffix}`;
   }
 
-  return `${resolveDebitInstitutionLabel(account)} · ${account.name}`;
+  return `${resolveDebitInstitutionLabel(account, lang)} · ${name}`;
 }
 
-export function debitKindLabel(account: DebitCashAccount) {
-  return DEBIT_ACCOUNT_KIND_LABELS[account.kind];
+export function debitKindLabel(account: DebitCashAccount, lang: AppLang = "ru") {
+  return getDebitKindLabel(account.kind, lang);
 }

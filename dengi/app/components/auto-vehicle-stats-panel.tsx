@@ -30,7 +30,8 @@ import {
   AUTO_VEHICLE_STAT_AMOUNT_NEUTRAL,
   AUTO_VEHICLE_STAT_AMOUNT_POSITIVE,
 } from "@/lib/auto-vehicles/detail-theme";
-import { formatAppDateNumeric } from "@/lib/i18n/locale";
+import { formatAppDateNumeric, resolveAppLocale } from "@/lib/i18n/locale";
+import { useLocale } from "@/app/components/locale-provider";
 import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
 
 type StatTone = "neutral" | "danger" | "positive";
@@ -47,11 +48,15 @@ function amountClassForTone(tone: StatTone) {
   return AUTO_VEHICLE_STAT_AMOUNT_NEUTRAL;
 }
 
-function formatPaymentDayLabel(day: number) {
-  return `${day}-го числа`;
+function formatPaymentDayLabel(day: number, t: (k: string, p?: Record<string, string | number>) => string) {
+  return t("auto.stats.paymentDay", { day });
 }
 
-function formatPaymentsWord(count: number) {
+function formatPaymentsWord(count: number, lang: "ru" | "en") {
+  if (lang === "en") {
+    return count === 1 ? "payment" : "payments";
+  }
+
   const mod10 = count % 10;
   const mod100 = count % 100;
 
@@ -66,8 +71,8 @@ function formatPaymentsWord(count: number) {
   return "платежей";
 }
 
-function formatPaymentsCountLine(count: number) {
-  return `${count} ${formatPaymentsWord(count)}`;
+function formatPaymentsCountLine(count: number, lang: "ru" | "en") {
+  return `${count} ${formatPaymentsWord(count, lang)}`;
 }
 
 function StatCellColumn({
@@ -150,29 +155,31 @@ function CurrentLoanPlaque({
   loanEndDate?: string | null;
   nextPaymentSubline?: string;
 }) {
+  const { lang, t } = useLocale();
+
   return (
     <AutoVehicleDetailBubbleCard>
       <div className="grid grid-cols-3 gap-0.5">
         <StatCellColumn
-          label="Остаток долга"
+          label={t("auto.stats.remainingDebt")}
           value={
             <UsdAmount amount={remaining} exact className={AUTO_VEHICLE_STAT_AMOUNT_DANGER} />
           }
-          meta={formatPaymentsCountLine(paymentsRemaining)}
+          meta={formatPaymentsCountLine(paymentsRemaining, lang)}
           tone="danger"
         />
         <StatCellColumn
-          label="Осталось"
+          label={t("auto.stats.remaining")}
           value={paymentsRemaining}
-          meta={formatPaymentsWord(paymentsRemaining)}
+          meta={formatPaymentsWord(paymentsRemaining, lang)}
           tone="danger"
         />
         <StatCellColumn
-          label="Выплачено"
+          label={t("auto.stats.paid")}
           value={
             <UsdAmount amount={totalPaid} exact className={AUTO_VEHICLE_STAT_AMOUNT_POSITIVE} />
           }
-          meta={formatPaymentsCountLine(paymentsDone)}
+          meta={formatPaymentsCountLine(paymentsDone, lang)}
           tone="positive"
         />
       </div>
@@ -180,7 +187,7 @@ function CurrentLoanPlaque({
       {loanEndDate || nextPaymentSubline ? (
         <div className="flex items-baseline justify-between gap-2 border-t border-white/55 px-2 py-2">
           <p className="shrink-0 text-[10px] font-medium leading-tight text-zinc-400">
-            {loanEndDate ? `Конец кредита ${formatAppDateNumeric(loanEndDate)}` : ""}
+            {loanEndDate ? t("auto.stats.loanEndDate", { date: formatAppDateNumeric(loanEndDate) }) : ""}
           </p>
           <p className="min-w-0 truncate text-right text-[13px] font-semibold leading-tight text-zinc-700">
             {nextPaymentSubline ?? ""}
@@ -210,8 +217,8 @@ function StatSection({
   );
 }
 
-function formatCurrentMonthLabel() {
-  return new Intl.DateTimeFormat("ru-RU", { month: "long", year: "numeric" }).format(new Date());
+function formatCurrentMonthLabel(lang: string) {
+  return new Intl.DateTimeFormat(resolveAppLocale(lang as "ru" | "en"), { month: "long", year: "numeric" }).format(new Date());
 }
 
 function formatCurrentYearLabel() {
@@ -227,6 +234,7 @@ function formatRatePercent(value: number) {
 }
 
 export function AutoVehicleStatsPanel({ vehicle }: { vehicle: AutoVehicle }) {
+  const { lang, t } = useLocale();
   const { allVehicleRecords } = useAutoVehicleRecords(vehicle.id);
 
   const stats = useMemo(
@@ -248,8 +256,8 @@ export function AutoVehicleStatsPanel({ vehicle }: { vehicle: AutoVehicle }) {
       return undefined;
     }
 
-    return formatNextPaymentSubline(nextDate);
-  }, [vehicle, allVehicleRecords]);
+    return formatNextPaymentSubline(nextDate, lang);
+  }, [vehicle, allVehicleRecords, lang]);
 
   const showLoan = shouldShowCreditVehicleStats(vehicle);
 
@@ -264,11 +272,11 @@ export function AutoVehicleStatsPanel({ vehicle }: { vehicle: AutoVehicle }) {
 
   return (
     <div className="space-y-5">
-      <StatSection title="Общее">
+      <StatSection title={t("auto.stats.sectionGeneral")}>
         <div className={CREDIT_STATS_GENERAL_GRID_CLASS_NAME}>
           <StatPlaque
             variant="general"
-            label="Сумма покупки"
+            label={t("auto.stats.purchasePrice")}
             value={
               <UsdAmount
                 amount={stats.purchasePrice}
@@ -280,7 +288,7 @@ export function AutoVehicleStatsPanel({ vehicle }: { vehicle: AutoVehicle }) {
           />
           <StatPlaque
             variant="general"
-            label="Месячный платёж"
+            label={t("auto.stats.monthlyPayment")}
             value={
               showLoan ? (
                 <UsdAmount
@@ -292,16 +300,16 @@ export function AutoVehicleStatsPanel({ vehicle }: { vehicle: AutoVehicle }) {
                 "—"
               )
             }
-            subValue={showLoan ? formatPaymentDayLabel(resolveLoanPaymentDay(vehicle)) : undefined}
+            subValue={showLoan ? formatPaymentDayLabel(resolveLoanPaymentDay(vehicle), t) : undefined}
           />
           <StatPlaque
             variant="general"
-            label="Ставка"
+            label={t("auto.stats.rate")}
             value={showLoan ? formatRatePercent(stats.annualRatePercent) : "—"}
           />
           <StatPlaque
             variant="general"
-            label="Страховка"
+            label={t("auto.stats.insurance")}
             value={
               insuranceSnapshot ? (
                 <UsdAmount
@@ -319,7 +327,7 @@ export function AutoVehicleStatsPanel({ vehicle }: { vehicle: AutoVehicle }) {
       </StatSection>
 
       {showLoan ? (
-        <StatSection title="Сейчас" dense>
+        <StatSection title={t("auto.stats.sectionCurrent")} dense>
           <div style={{ marginTop: CREDIT_STATS_NOW_SECTION_OFFSET_PX }}>
             <AutoVehicleLoanPaidProgress vehicle={vehicle} />
             <div style={{ marginTop: CREDIT_STATS_LOAN_PLAQUE_GAP_PX }}>
@@ -337,10 +345,10 @@ export function AutoVehicleStatsPanel({ vehicle }: { vehicle: AutoVehicle }) {
       ) : null}
 
       {showLoan ? (
-        <StatSection title="Проценты">
+        <StatSection title={t("auto.stats.sectionInterest")}>
           <div className="grid grid-cols-3 gap-1.5">
             <StatPlaque
-              label="Осталось"
+              label={t("auto.stats.remaining")}
               value={
                 <UsdAmount
                   amount={stats.remainingInterestApprox}
@@ -351,14 +359,14 @@ export function AutoVehicleStatsPanel({ vehicle }: { vehicle: AutoVehicle }) {
               tone="danger"
             />
             <StatPlaque
-              label="Выплачено"
+              label={t("auto.stats.paid")}
               value={
                 <UsdAmount amount={stats.paidInterest} exact className={AUTO_VEHICLE_STAT_AMOUNT_DANGER} />
               }
               tone="danger"
             />
             <StatPlaque
-              label="В этом месяце"
+              label={t("auto.stats.thisMonth")}
               value={
                 <UsdAmount amount={stats.monthlyInterest} exact className={AUTO_VEHICLE_STAT_AMOUNT_DANGER} />
               }
@@ -368,10 +376,10 @@ export function AutoVehicleStatsPanel({ vehicle }: { vehicle: AutoVehicle }) {
         </StatSection>
       ) : null}
 
-      <StatSection title="Расходы">
+      <StatSection title={t("auto.stats.sectionExpenses")}>
         <div className="grid grid-cols-2 gap-1.5">
           <StatPlaque
-            label="Месяц"
+            label={t("auto.stats.expenseMonth")}
             value={
               <UsdAmount
                 amount={expenseTotals.thisMonth}
@@ -379,10 +387,10 @@ export function AutoVehicleStatsPanel({ vehicle }: { vehicle: AutoVehicle }) {
                 className={AUTO_VEHICLE_STAT_AMOUNT_NEUTRAL}
               />
             }
-            subValue={formatCurrentMonthLabel()}
+            subValue={formatCurrentMonthLabel(lang)}
           />
           <StatPlaque
-            label="Год"
+            label={t("auto.stats.expenseYear")}
             value={
               <UsdAmount
                 amount={expenseTotals.thisYear}

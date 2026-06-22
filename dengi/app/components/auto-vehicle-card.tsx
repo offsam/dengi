@@ -1,5 +1,8 @@
+"use client";
+
 import { AutoVehicleVisual } from "@/app/components/auto-vehicle-visual";
 import { UsdAmount } from "@/app/components/usd-amount";
+import { useLocale } from "@/app/components/locale-provider";
 import { formatMileage } from "@/lib/format-money";
 import { buildVehicleCompactLabel, buildVehicleDisplayHeading } from "@/lib/auto-vehicles";
 import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
@@ -37,8 +40,10 @@ export function AutoVehicleCard({
   vehicle: AutoVehicle;
   density?: AutoVehicleTileDensity;
 }) {
+  const { lang, t } = useLocale();
+
   if (density === "minimal") {
-    const label = buildVehicleCompactLabel(vehicle.catalogId, vehicle.year);
+    const label = buildVehicleCompactLabel(vehicle.catalogId, vehicle.year, lang);
 
     return (
       <article className="w-[115px] shrink-0">
@@ -86,13 +91,13 @@ export function AutoVehicleCard({
         </p>
 
         <div className="mt-1 space-y-1">
-          <InfoRow label="Остаток" value={<UsdAmount amount={vehicle.remaining} exact />} />
+          <InfoRow label={t("auto.card.remaining")} value={<UsdAmount amount={vehicle.remaining} exact />} />
           <InfoRow
-            label="Платёж по кредиту"
+            label={t("auto.card.loanPayment")}
             value={<UsdAmount amount={vehicle.loanPayment} exact />}
           />
           <InfoRow
-            label="Проценты по кредиту"
+            label={t("auto.card.loanInterest")}
             value={<UsdAmount amount={vehicle.loanInterest} exact tone="danger" />}
             tone="danger"
           />

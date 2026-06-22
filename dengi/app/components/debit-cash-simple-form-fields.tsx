@@ -3,6 +3,7 @@
 import { BubbleCard } from "@/app/components/bubble-card";
 import { ReadonlyFormValue } from "@/app/components/editable-form-value";
 import { FormRowEnd, UsdAmount, UsdAmountInput } from "@/app/components/usd-amount";
+import { useLocale } from "@/app/components/locale-provider";
 import { APP_BUBBLE_INSET_CONTROL } from "@/lib/app-theme";
 import type { DebitCashAccount } from "@/lib/dashboard/debit-accounts";
 import { toCreditCardNumber } from "@/app/components/credit-card-form-fields";
@@ -31,13 +32,15 @@ export function DebitCashSimpleFormFields({
   onPatch: (patch: Partial<DebitCashAccount>) => void;
   readOnly?: boolean;
 }) {
+  const { t } = useLocale();
+
   return (
     <section className="space-y-2">
       <h2 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-        Наличные
+        {t("debit.kind.cash")}
       </h2>
       <BubbleCard>
-        <EditRow label="Сумма">
+        <EditRow label={t("common.amount")}>
           {readOnly ? (
             <ReadonlyFormValue>
               <UsdAmount amount={draft.balance} exact />
@@ -57,9 +60,7 @@ export function DebitCashSimpleFormFields({
         </EditRow>
       </BubbleCard>
       {!readOnly ? (
-        <p className="px-1 text-xs leading-relaxed text-zinc-500">
-          Укажите сколько наличных у вас сейчас — больше ничего не нужно.
-        </p>
+        <p className="px-1 text-xs leading-relaxed text-zinc-500">{t("debit.cashForm.hint")}</p>
       ) : null}
     </section>
   );

@@ -8,6 +8,7 @@ import { BANKS, isOtherBank, POPULAR_BANK_IDS, type BankId } from "@/lib/bank-lo
 import type { DebitCashAccount } from "@/lib/dashboard/debit-accounts";
 import { resolveDebitBankLabel } from "@/lib/dashboard/debit-accounts";
 import { toCreditCardNumber } from "@/app/components/credit-card-form-fields";
+import { useLocale } from "@/app/components/locale-provider";
 
 const fieldClassName =
   "w-full min-w-0 border-0 bg-transparent py-0 text-right text-[15px] leading-none text-zinc-900 outline-none ring-0 placeholder:text-zinc-300 focus:ring-0";
@@ -113,6 +114,7 @@ export function DebitBankFormFields({
   addFlow?: boolean;
   readOnly?: boolean;
 }) {
+  const { lang, t } = useLocale();
   const incognito = draft.incognito ?? false;
   const showCustomBank = Boolean(draft.bankId && isOtherBank(draft.bankId));
   const bankReady = incognito
@@ -127,10 +129,10 @@ export function DebitBankFormFields({
 
   return (
     <div className="space-y-5">
-      <FormSection title="Основное">
-        <EditRow label="Инкогнито">
+      <FormSection title={t("common.sectionMain")}>
+        <EditRow label={t("debit.form.incognito")}>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-500">Скрыть банк</span>
+            <span className="text-xs text-zinc-500">{t("debit.form.incognitoHintBank")}</span>
             <IncognitoToggle
               checked={incognito}
               disabled={readOnly && !addFlow}
@@ -147,7 +149,7 @@ export function DebitBankFormFields({
 
         {!incognito ? (
           <>
-            <EditRow label="Банк">
+            <EditRow label={t("debit.form.bank")}>
               {readOnly && !addFlow ? (
                 <ReadonlyFormValue>
                   <span className="text-[15px] text-zinc-700">{resolveDebitBankLabel(draft)}</span>
@@ -169,7 +171,7 @@ export function DebitBankFormFields({
                   >
                     {addFlow ? (
                       <option value="" disabled>
-                        Выберите банк
+                        {t("debit.form.bankPlaceholder")}
                       </option>
                     ) : null}
                     {POPULAR_BANK_IDS.map((bankId) => (
@@ -184,11 +186,11 @@ export function DebitBankFormFields({
             </EditRow>
 
             {showCustomBank ? (
-              <EditRow label="Название банка">
+              <EditRow label={t("debit.form.customBankName")}>
                 {readOnly && !addFlow ? (
                   <ReadonlyFormValue>
                     <span className="text-[15px] text-zinc-700">
-                      {draft.customBankName?.trim() || "—"}
+                      {draft.customBankName?.trim() || t("common.dash")}
                     </span>
                   </ReadonlyFormValue>
                 ) : (
@@ -204,20 +206,20 @@ export function DebitBankFormFields({
           </>
         ) : (
           <p className="px-4 pb-2.5 text-xs leading-relaxed text-zinc-500">
-            Банк не будет виден на карточке — только название счёта и баланс.
+            {t("debit.form.incognitoBankNote")}
           </p>
         )}
 
         {bankReady ? (
-          <EditRow label="Название счёта">
+          <EditRow label={t("debit.form.accountName")}>
             {readOnly && !addFlow ? (
               <ReadonlyFormValue>
-                <span className="text-[15px] text-zinc-700">{draft.name || "—"}</span>
+                <span className="text-[15px] text-zinc-700">{draft.name || t("common.dash")}</span>
               </ReadonlyFormValue>
             ) : (
               <DirectTextInput
                 value={draft.name}
-                placeholder="Расчётный счёт"
+                placeholder={t("debit.form.accountNamePlaceholder")}
                 widthClassName="w-[9rem]"
                 disabled={readOnly && !addFlow}
                 onChange={(name) => onPatch({ name })}
@@ -228,8 +230,8 @@ export function DebitBankFormFields({
       </FormSection>
 
       {!addFlow || bankReady ? (
-        <FormSection title="Баланс">
-          <EditRow label="Сумма">
+        <FormSection title={t("common.balance")}>
+          <EditRow label={t("common.amount")}>
             {readOnly && !addFlow ? (
               <ReadonlyFormValue>
                 <UsdAmount amount={draft.balance} exact />

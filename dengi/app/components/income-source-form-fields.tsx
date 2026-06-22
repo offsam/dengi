@@ -1,6 +1,10 @@
+"use client";
+
 import { BubbleCard } from "@/app/components/bubble-card";
 import { UsdAmountInput } from "@/app/components/usd-amount";
+import { useLocale } from "@/app/components/locale-provider";
 import { APP_BUBBLE_INPUT } from "@/lib/app-theme";
+import { getIncomeKindLabel } from "@/lib/i18n/labels";
 import {
   INCOME_SOURCE_KIND_PRESETS,
   type IncomeSource,
@@ -39,13 +43,14 @@ export function IncomeSourceFormFields({
   onCustomKindLabelChange: (value: string) => void;
   readOnly?: boolean;
 }) {
+  const { lang, t } = useLocale();
   const showCustomKind = draft.kind === "other";
 
   return (
     <BubbleCard className="space-y-4 p-4">
-      <h2 className="text-sm font-semibold text-zinc-900">Источник дохода</h2>
+      <h2 className="text-sm font-semibold text-zinc-900">{t("income.form.sectionTitle")}</h2>
 
-      <Field label="Тип">
+      <Field label={t("income.card.type")}>
         <select
           className={inputClassName}
           value={draft.kind}
@@ -54,37 +59,37 @@ export function IncomeSourceFormFields({
         >
           {INCOME_SOURCE_KIND_PRESETS.map((preset) => (
             <option key={preset.kind} value={preset.kind}>
-              {preset.label}
+              {getIncomeKindLabel(preset.kind, lang)}
             </option>
           ))}
         </select>
       </Field>
 
       {showCustomKind ? (
-        <Field label="Название типа">
+        <Field label={t("income.form.customKindLabel")}>
           <input
             className={inputClassName}
             value={customKindLabel}
             disabled={readOnly}
             onChange={(event) => onCustomKindLabelChange(event.target.value)}
-            placeholder="Например, дивиденды"
+            placeholder={t("income.form.customKindPlaceholder")}
             required
           />
         </Field>
       ) : null}
 
-      <Field label="Название">
+      <Field label={t("common.name")}>
         <input
           className={inputClassName}
           value={draft.name}
           disabled={readOnly}
           onChange={(event) => onPatch({ name: event.target.value })}
-          placeholder="Основная работа"
+          placeholder={t("income.form.namePlaceholder")}
           required
         />
       </Field>
 
-      <Field label="Сумма в месяц">
+      <Field label={t("income.form.monthlyAmount")}>
         <UsdAmountInput
           className={inputClassName}
           value={draft.monthlyAmount}

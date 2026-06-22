@@ -14,11 +14,13 @@ import {
 } from "@/app/components/housing-bill-detail-tabs";
 import { HousingBillSettingsPanel } from "@/app/components/housing-bill-settings-panel";
 import { SimpleDeleteDialog } from "@/app/components/simple-delete-dialog";
+import { useLocale } from "@/app/components/locale-provider";
 import { useHousingBills } from "@/app/hooks/use-housing-bills";
 import { APP_PAGE_CLASS } from "@/lib/app-theme";
 import type { HousingBill } from "@/lib/dashboard/housing-bills";
 
 function HousingBillDetailContent({ bill }: { bill: HousingBill }) {
+  const { t } = useLocale();
   const router = useRouter();
   const { updateBill, deleteBill } = useHousingBills();
   const [tab, setTab] = useState<HousingBillDetailTab>("overview");
@@ -32,7 +34,7 @@ function HousingBillDetailContent({ bill }: { bill: HousingBill }) {
             href="/"
             className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
           >
-            Назад
+            {t("common.back")}
           </Link>
           <h1 className="truncate text-sm font-semibold tracking-tight">{bill.name}</h1>
           <span className="w-10" aria-hidden />
@@ -56,8 +58,8 @@ function HousingBillDetailContent({ bill }: { bill: HousingBill }) {
 
       <SimpleDeleteDialog
         open={deleteOpen}
-        title="Удалить счёт?"
-        description={`«${bill.name}» исчезнет с главного экрана.`}
+        title={t("housing.deleteDialog.title")}
+        description={t("housing.deleteDialog.description", { name: bill.name })}
         onClose={() => setDeleteOpen(false)}
         onConfirm={() => {
           setDeleteOpen(false);
@@ -70,6 +72,7 @@ function HousingBillDetailContent({ bill }: { bill: HousingBill }) {
 }
 
 export function HousingBillSettingsView({ billId }: { billId: string }) {
+  const { t } = useLocale();
   const { getBill } = useHousingBills();
   const bill = getBill(billId);
 
@@ -80,9 +83,9 @@ export function HousingBillSettingsView({ billId }: { billId: string }) {
           href="/"
           className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
         >
-          На главную
+          {t("common.goHome")}
         </Link>
-        <p className="text-sm text-zinc-600">Счёт не найден.</p>
+        <p className="text-sm text-zinc-600">{t("housing.notFound")}</p>
       </div>
     );
   }

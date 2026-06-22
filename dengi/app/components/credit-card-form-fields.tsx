@@ -17,6 +17,7 @@ import {
   patchPaymentDueDay,
   resolvePaymentDueDay,
 } from "@/lib/credit-cards/payment-due-date";
+import { useLocale } from "@/app/components/locale-provider";
 
 const fieldClassName =
   "w-full min-w-0 border-0 bg-transparent py-0 text-right text-[15px] leading-none text-zinc-900 outline-none ring-0 placeholder:text-zinc-300 focus:ring-0";
@@ -216,6 +217,7 @@ export function CreditCardFormFields({
   addFlow?: boolean;
   readOnly?: boolean;
 }) {
+  const { lang, t } = useLocale();
   const showCustomBankName = isOtherBank(draft.bankId);
   const bankReady = addFlow
     ? Boolean(draft.bankId) && (!showCustomBankName || Boolean(draft.customBankName?.trim()))
@@ -233,8 +235,8 @@ export function CreditCardFormFields({
 
   return (
     <div className="space-y-5">
-      <FormSection title="Основное">
-        <EditRow label="Банк">
+      <FormSection title={t("common.sectionMain")}>
+        <EditRow label={t("credit.form.bank")}>
           {readOnly && !addFlow ? (
             <InfoValue>{resolveBankLabel(draft)}</InfoValue>
           ) : (
@@ -256,7 +258,7 @@ export function CreditCardFormFields({
               >
                 {addFlow ? (
                   <option value="" disabled>
-                    Выберите банк
+                    {t("credit.form.bankPlaceholder")}
                   </option>
                 ) : null}
                 {POPULAR_BANK_IDS.map((bankId) => (
@@ -271,9 +273,9 @@ export function CreditCardFormFields({
         </EditRow>
 
         {showCustomBankName ? (
-          <EditRow label="Название банка">
+          <EditRow label={t("credit.form.customBankName")}>
             {readOnly && !addFlow ? (
-              <InfoValue>{draft.customBankName?.trim() || "—"}</InfoValue>
+              <InfoValue>{draft.customBankName?.trim() || t("common.dash")}</InfoValue>
             ) : (
               <DirectTextInput
                 value={draft.customBankName ?? ""}
@@ -288,9 +290,9 @@ export function CreditCardFormFields({
 
         {bankReady ? (
           <>
-            <EditRow label="Название карты">
+            <EditRow label={t("credit.form.cardName")}>
               {readOnly && !addFlow ? (
-                <InfoValue>{draft.name || "—"}</InfoValue>
+                <InfoValue>{draft.name || t("common.dash")}</InfoValue>
               ) : (
                 <DirectTextInput
                   value={draft.name}
@@ -303,7 +305,7 @@ export function CreditCardFormFields({
               )}
             </EditRow>
 
-            <EditRow label="Кредитный лимит">
+            <EditRow label={t("credit.form.limit")}>
               <EditableUsdRow
                 value={draft.limit}
                 onChange={(limit) => onPatch({ limit })}
@@ -313,7 +315,7 @@ export function CreditCardFormFields({
               />
             </EditRow>
 
-            <EditRow label="Процентная ставка">
+            <EditRow label={t("credit.form.apr")}>
               {readOnly && !addFlow ? (
                 <InfoValue>{formatAprInput(draft.apr)}%</InfoValue>
               ) : (
@@ -332,27 +334,27 @@ export function CreditCardFormFields({
               )}
             </EditRow>
 
-            <EditRow label="Дата платежа">
+            <EditRow label={t("credit.form.paymentDate")}>
               {readOnly && !addFlow ? (
                 <InfoValue>
-                  {formatPaymentDueDayDisplay(resolvePaymentDueDay(draft))}
+                  {formatPaymentDueDayDisplay(resolvePaymentDueDay(draft), lang)}
                 </InfoValue>
               ) : (
                 <DirectNumberInput
                   value={resolvePaymentDueDay(draft)}
                   min={1}
                   max={31}
-                  suffix="число"
+                  suffix={t("credit.form.daySuffix")}
                   widthClassName="w-[3.5rem]"
                   highlighted={editable}
                   highlightClassName={activeControlClassName}
-                  onChange={(paymentDueDay) => onPatch(patchPaymentDueDay(paymentDueDay))}
+                  onChange={(paymentDueDay) => onPatch(patchPaymentDueDay(paymentDueDay, lang))}
                 />
               )}
             </EditRow>
             {addFlow ? (
               <p className="px-4 pb-2.5 text-xs text-zinc-500">
-                Число месяца, когда нужно платить по карте.
+                {t("credit.form.paymentDayHint")}
               </p>
             ) : null}
           </>
@@ -361,8 +363,8 @@ export function CreditCardFormFields({
 
       {!addFlow || bankReady ? (
         <>
-          <FormSection title="Балансы">
-            <EditRow label="Текущий баланс">
+          <FormSection title={t("credit.form.sectionBalances")}>
+            <EditRow label={t("credit.form.currentBalance")}>
               <EditableUsdRow
                 value={draft.balance}
                 onChange={(balance) => onPatch({ balance })}
@@ -372,7 +374,7 @@ export function CreditCardFormFields({
               />
             </EditRow>
 
-            <EditRow label="Предыдущий баланс">
+            <EditRow label={t("credit.form.previousBalance")}>
               <EditableUsdRow
                 value={draft.previousBalance}
                 onChange={(previousBalance) => onPatch({ previousBalance })}
@@ -382,14 +384,13 @@ export function CreditCardFormFields({
               />
             </EditRow>
 
-            <EditRow label="Мин. платёж">
+            <EditRow label={t("credit.form.minPayment")}>
               <InfoValue>
                 <UsdAmount amount={computedMinPayment} exact />
               </InfoValue>
             </EditRow>
             <p className="px-4 pb-2.5 text-xs leading-relaxed text-zinc-500">
-              Считается автоматически: 1% от долга + месячные проценты, но не
-              меньше $25.
+              {t("credit.form.minPaymentHint")}
             </p>
           </FormSection>
         </>

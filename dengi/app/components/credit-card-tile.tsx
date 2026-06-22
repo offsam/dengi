@@ -1,4 +1,7 @@
+"use client";
+
 import { BankLogo, BANKS, getCreditCardBankName } from "@/lib/bank-logos";
+import { useLocale } from "@/app/components/locale-provider";
 import { formatMoney, formatMoneyExact } from "@/lib/format-money";
 import type { ContractTerm } from "@/lib/credit-cards/parse-contract-terms";
 import {
@@ -8,6 +11,7 @@ import {
 } from "@/lib/credit-cards/payment-due-date";
 import { calculateMinimumPayment } from "@/lib/credit-cards/min-payment";
 import { formatCompactCardName } from "@/lib/credit-cards/compact-name";
+import { localizeContractTerm } from "@/lib/credit-cards/localize-contract-term";
 import type { CreditCard } from "@/lib/credit-cards/types";
 
 export type CreditCardTileVariant = "compact" | "detail";
@@ -116,6 +120,8 @@ function StatementCycleDelta({
   delta: number;
   size: TileSize;
 }) {
+  const { t } = useLocale();
+
   if (delta === 0) {
     return null;
   }
@@ -133,8 +139,8 @@ function StatementCycleDelta({
       className="flex flex-col items-end gap-0.5 leading-none"
       aria-label={
         improved
-          ? `Долг снизился на ${formatMoneyExact(Math.abs(delta))}`
-          : `Долг вырос на ${formatMoneyExact(Math.abs(delta))}`
+          ? t("credit.tile.debtDecreased", { amount: formatMoneyExact(Math.abs(delta)) })
+          : t("credit.tile.debtIncreased", { amount: formatMoneyExact(Math.abs(delta)) })
       }
     >
       {improved ? (
@@ -175,6 +181,7 @@ function ContractTermsList({
   terms: ContractTerm[];
   variant: CreditCardTileVariant;
 }) {
+  const { lang } = useLocale();
   const size = TILE_SIZES[variant];
   const valueClass =
     variant === "detail"
@@ -189,7 +196,10 @@ function ContractTermsList({
           : "min-h-0 flex-1 space-y-0.5 overflow-y-auto pr-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       }
     >
-      {terms.map((term) => (
+      {terms.map((term) => {
+        const display = localizeContractTerm(term, lang);
+
+        return (
         <li
           key={term.id}
           className={
@@ -198,12 +208,13 @@ function ContractTermsList({
               : "flex items-baseline justify-between gap-1 leading-tight"
           }
         >
-          <span className={size.termLabel}>{term.label}</span>
+          <span className={size.termLabel}>{display.label}</span>
           <span className={`${valueClass} ${termValueClass(term.category)}`}>
-            {term.value}
+            {display.value}
           </span>
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 }
@@ -227,8 +238,9 @@ export function CreditCardTile({
   variant?: CreditCardTileVariant;
   density?: CreditCardTileDensity;
 }) {
+  const { lang, t } = useLocale();
   const dueDay = resolvePaymentDueDay({ paymentDueDay, dueDate });
-  const displayDueDate = dueDay > 0 ? formatCreditCardDueLabel(dueDay) : dueDate;
+  const displayDueDate = dueDay > 0 ? formatCreditCardDueLabel(dueDay, lang) : dueDate;
   const displayDaysUntilDue =
     dueDay > 0 ? resolveDaysUntilDueFromDay(dueDay) : daysUntilDue;
   const delta = balance - previousBalance;
@@ -241,7 +253,7 @@ export function CreditCardTile({
   const displayMinPayment = calculateMinimumPayment({ balance, apr, contract });
 
   if (variant === "compact" && density === "minimal") {
-    const compactName = formatCompactCardName(name);
+    const compactName = formatCompactCardName(name, lang);
 
     return (
       <article
@@ -302,7 +314,7 @@ export function CreditCardTile({
 
         {hasTerms ? (
           <div className={size.termsBox}>
-            <p className={size.termHeader}>Условия договора</p>
+            <p className={size.termHeader}>{t("credit.tile.contractTerms")}</p>
             <ContractTermsList terms={terms} variant={variant} />
           </div>
         ) : null}
@@ -314,11 +326,11 @@ export function CreditCardTile({
             </p>
             {variant === "detail" ? (
               <p className={`truncate font-bold text-rose-400 ${size.small}`}>
-                {formatMoneyExact(interestByDue)} проц.
+                {formatMoneyExact(interestByDue)} {t("credit.tile.interestUnit")}
               </p>
             ) : null}
             <p className={`font-medium text-white/90 ${size.small}`}>
-              Мин. {formatMoneyExact(displayMinPayment)}{" "}
+              {t("credit.tile.minPrefix", { amount: formatMoneyExact(displayMinPayment) })}{" "}
               <span className="font-normal text-white/75">{displayDueDate}</span>
             </p>
           </div>

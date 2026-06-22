@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { BubbleCard } from "@/app/components/bubble-card";
+import { useLocale } from "@/app/components/locale-provider";
 import { buildVehicleDisplayTitle } from "@/lib/auto-vehicles";
 import type { AutoVehicle } from "@/lib/auto-vehicles/vehicle";
 
@@ -18,6 +19,8 @@ export function AutoVehicleAddedDialog({
   vehicle: AutoVehicle | null;
   onContinue: () => void;
 }) {
+  const { t } = useLocale();
+
   useEffect(() => {
     if (!open || !vehicle) {
       return;
@@ -57,7 +60,7 @@ export function AutoVehicleAddedDialog({
       <button
         type="button"
         className="absolute inset-0 bg-black/40"
-        aria-label="Перейти к автомобилю"
+        aria-label={t("auto.addedDialog.backdropAria")}
         onClick={onContinue}
       />
 
@@ -66,18 +69,17 @@ export function AutoVehicleAddedDialog({
           id="auto-added-title"
           className="text-center text-base font-semibold tracking-tight text-zinc-900"
         >
-          Поздравляем!
+          {t("auto.addedDialog.title")}
         </h2>
         <p className="mt-3 text-center text-sm leading-snug text-zinc-600">
-          Ваш{" "}
-          <span className="font-semibold text-zinc-900">{vehicleLabel}</span> добавлен в гараж.
+          {t("auto.addedDialog.message", { name: vehicleLabel })}
         </p>
         <button
           type="button"
           className="mt-5 w-full rounded-full bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
           onClick={onContinue}
         >
-          Перейти к автомобилю
+          {t("auto.addedDialog.goToVehicle")}
         </button>
       </BubbleCard>
     </div>

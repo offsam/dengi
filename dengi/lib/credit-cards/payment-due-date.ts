@@ -1,3 +1,5 @@
+import type { AppLang } from "@/lib/i18n/types";
+import { formatPaymentDueDay } from "@/lib/i18n/presets";
 import type { CreditCard } from "./types";
 
 const MS_PER_DAY = 86_400_000;
@@ -49,17 +51,13 @@ export function resolveDaysUntilDueFromDay(dayOfMonth: number, from = new Date()
   return Math.max(0, Math.ceil((due.getTime() - start.getTime()) / MS_PER_DAY));
 }
 
-/** Короткая подпись, например «22-е число» */
-export function formatCreditCardDueLabel(dayOfMonth: number) {
-  if (dayOfMonth < 1 || dayOfMonth > 31) {
-    return "—";
-  }
-
-  return `${dayOfMonth}-е число`;
+/** Короткая подпись дня платежа */
+export function formatCreditCardDueLabel(dayOfMonth: number, lang: AppLang = "ru") {
+  return formatPaymentDueDay(dayOfMonth, lang);
 }
 
-export function formatPaymentDueDayDisplay(dayOfMonth: number) {
-  return formatCreditCardDueLabel(dayOfMonth);
+export function formatPaymentDueDayDisplay(dayOfMonth: number, lang: AppLang = "ru") {
+  return formatCreditCardDueLabel(dayOfMonth, lang);
 }
 
 /** Число месяца из сохранённых полей (в т.ч. старые записи) */
@@ -82,7 +80,7 @@ export function resolvePaymentDueDay(
   return 0;
 }
 
-export function patchPaymentDueDay(dayOfMonth: number): Partial<CreditCard> {
+export function patchPaymentDueDay(dayOfMonth: number, lang: AppLang = "ru"): Partial<CreditCard> {
   const day = Math.round(dayOfMonth);
 
   if (day < 1 || day > 31) {
@@ -95,14 +93,15 @@ export function patchPaymentDueDay(dayOfMonth: number): Partial<CreditCard> {
 
   return {
     paymentDueDay: day,
-    dueDate: formatCreditCardDueLabel(day),
+    dueDate: formatCreditCardDueLabel(day, lang),
     daysUntilDue: resolveDaysUntilDueFromDay(day),
   };
 }
 
 /** Пересчитать daysUntilDue для всех карт (например при открытии) */
 export function refreshPaymentDueDerivedFields(
-  card: Pick<CreditCard, "paymentDueDay" | "dueDate" | "daysUntilDue">
+  card: Pick<CreditCard, "paymentDueDay" | "dueDate" | "daysUntilDue">,
+  lang: AppLang = "ru"
 ): Partial<CreditCard> {
   const day = resolvePaymentDueDay(card);
   if (day <= 0) {
@@ -111,7 +110,7 @@ export function refreshPaymentDueDerivedFields(
 
   return {
     paymentDueDay: day,
-    dueDate: formatCreditCardDueLabel(day),
+    dueDate: formatCreditCardDueLabel(day, lang),
     daysUntilDue: resolveDaysUntilDueFromDay(day),
   };
 }

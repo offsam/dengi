@@ -1,6 +1,7 @@
 "use client";
 
 import type { DashboardMetricChartSegment } from "@/lib/dashboard/metric-breakdown";
+import { useLocale } from "@/app/components/locale-provider";
 
 function polarToCartesian(cx: number, cy: number, radius: number, angleDeg: number) {
   const angleRad = ((angleDeg - 90) * Math.PI) / 180;
@@ -122,11 +123,13 @@ export function DashboardMetricDonutChart({
 }: {
   segments: DashboardMetricChartSegment[];
 }) {
+  const { t } = useLocale();
+
   return (
     <div className="space-y-4 px-3.5 py-4">
       <DonutChart segments={segments} />
       {segments.length > 0 ? (
-        <div className="space-y-2.5" aria-label="Доли по категориям">
+        <div className="space-y-2.5" aria-label={t("common.categorySharesAria")}>
           {segments.map((segment) => (
             <LegendRow key={segment.id} segment={segment} />
           ))}

@@ -2,6 +2,7 @@
 
 import { BubbleCard } from "@/app/components/bubble-card";
 import { UsdAmount } from "@/app/components/usd-amount";
+import { useLocale } from "@/app/components/locale-provider";
 import { formatAppDateNumeric } from "@/lib/i18n/locale";
 import {
   DEBIT_CASH_ACCOUNTS,
@@ -21,45 +22,47 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export function AutoVehicleSoldSummary({ vehicle }: { vehicle: AutoVehicle }) {
+  const { lang, t } = useLocale();
   const wallet = DEBIT_CASH_ACCOUNTS.find((account) => account.id === vehicle.soldWalletId);
   const showUnpaidLoan = Boolean(vehicle.soldIgnoreLoanPayoff && vehicle.remaining > 0);
 
   return (
     <section className="space-y-2">
       <h2 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-        Продажа
+        {t("auto.soldSummary.sectionTitle")}
       </h2>
       <BubbleCard>
         <InfoRow
-          label="Дата"
-          value={vehicle.soldAt ? formatAppDateNumeric(vehicle.soldAt) : "—"}
+          label={t("auto.soldSummary.date")}
+          value={vehicle.soldAt ? formatAppDateNumeric(vehicle.soldAt) : t("common.dash")}
         />
-        <InfoRow label="Сумма продажи" value={<UsdAmount amount={vehicle.soldPrice ?? 0} exact />} />
+        <InfoRow
+          label={t("auto.soldSummary.soldPrice")}
+          value={<UsdAmount amount={vehicle.soldPrice ?? 0} exact />}
+        />
         {(vehicle.soldLoanPayoff ?? 0) > 0 ? (
           <InfoRow
-            label="На кредит"
+            label={t("auto.soldSummary.toLoan")}
             value={<UsdAmount amount={vehicle.soldLoanPayoff ?? 0} exact />}
           />
         ) : null}
         {showUnpaidLoan ? (
           <InfoRow
-            label="Остаток в банке"
+            label={t("auto.soldSummary.bankRemaining")}
             value={<UsdAmount amount={vehicle.remaining} exact />}
           />
         ) : null}
         <InfoRow
-          label="На счёт"
+          label={t("auto.soldSummary.toAccount")}
           value={<UsdAmount amount={vehicle.soldWalletAmount ?? 0} exact />}
         />
         <InfoRow
-          label="Кошелёк"
-          value={wallet ? formatDebitCashAccountLabel(wallet) : "—"}
+          label={t("auto.soldSummary.wallet")}
+          value={wallet ? formatDebitCashAccountLabel(wallet, lang) : t("common.dash")}
         />
       </BubbleCard>
       {vehicle.soldIgnoreLoanPayoff ? (
-        <p className="px-1 text-xs leading-snug text-zinc-500">
-          Кредит не погашался из выручки — вся сумма зачислена на счёт.
-        </p>
+        <p className="px-1 text-xs leading-snug text-zinc-500">{t("auto.soldSummary.ignoreHint")}</p>
       ) : null}
     </section>
   );

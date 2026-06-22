@@ -1,5 +1,6 @@
+import { getIncomeKindLabel } from "@/lib/i18n/labels";
 import type { AppLang } from "@/lib/i18n/types";
-import { messages } from "@/lib/i18n/messages";
+import { messages } from "@/lib/i18n/messages/index";
 import { readIncomeSources } from "./storage";
 
 export type IncomeSourceKind = "salary" | "freelance" | "rental" | "other";
@@ -49,7 +50,7 @@ export function getIncomeSourceKindLabel(
     return source.customKindLabel.trim();
   }
 
-  return messages[lang].incomeKind[source.kind];
+  return getIncomeKindLabel(source.kind, lang);
 }
 
 export function createEmptyIncomeSourceDraft(): IncomeSourceDraft {

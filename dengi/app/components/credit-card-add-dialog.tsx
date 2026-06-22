@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BubbleAddDialog } from "@/app/components/bubble-add-dialog";
 import { CreditCardFormFields } from "@/app/components/credit-card-form-fields";
 import { CreditCardTile } from "@/app/components/credit-card-tile";
+import { useLocale } from "@/app/components/locale-provider";
 import { isOtherBank } from "@/lib/bank-logos";
 import {
   createEmptyCreditCardAddDraft,
@@ -11,11 +12,18 @@ import {
   type CreditCardAddDraft,
 } from "@/lib/credit-cards/defaults";
 import {
-  creditCardValidationMessage,
   normalizeCreditCardForPersist,
   validateCreditCardDraft,
+  type CreditCardValidationIssue,
 } from "@/lib/credit-cards/normalize";
 import type { CreditCard, CreditCardDraft } from "@/lib/credit-cards/types";
+
+const VALIDATION_KEYS: Record<CreditCardValidationIssue, string> = {
+  bank: "credit.validation.selectBank",
+  customBank: "credit.validation.enterBankName",
+  name: "credit.validation.enterCardName",
+  paymentDay: "credit.validation.enterPaymentDay",
+};
 
 export function CreditCardAddDialog({
   open,
@@ -26,6 +34,7 @@ export function CreditCardAddDialog({
   onClose: () => void;
   onAdd: (draft: CreditCardDraft) => void;
 }) {
+  const { t } = useLocale();
   const [draft, setDraft] = useState(createEmptyCreditCardAddDraft);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,12 +48,12 @@ export function CreditCardAddDialog({
 
     const issue = validateCreditCardDraft(draft);
     if (issue) {
-      setError(creditCardValidationMessage(issue));
+      setError(t(VALIDATION_KEYS[issue]));
       return;
     }
 
     if (!draft.bankId) {
-      setError(creditCardValidationMessage("bank"));
+      setError(t(VALIDATION_KEYS.bank));
       return;
     }
 
@@ -67,10 +76,10 @@ export function CreditCardAddDialog({
     <BubbleAddDialog
       open={open}
       onClose={onClose}
-      title="Добавить карту"
+      title={t("credit.addDialog.title")}
       titleId="add-card-title"
-      closeAriaLabel="Закрыть окно добавления карты"
-      submitLabel="Добавить карту"
+      closeAriaLabel={t("credit.addDialog.closeAria")}
+      submitLabel={t("credit.addDialog.submit")}
       onSubmit={handleSubmit}
       preview={<CreditCardTile {...draftToPreviewCard(draft)} />}
     >
